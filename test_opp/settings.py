@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.gis',
     'django.contrib.staticfiles',
+    'versatileimagefield',
+    'geostore',
     'rest_framework',
     'rest_framework_gis',
     'terra_opp',
