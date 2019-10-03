@@ -35,14 +35,14 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        'terra-common>=0.3,<0.4'
+        'Django==2.2.5',
+        'terra-common>=0.3.1,<0.4',
         "drf-yasg>=1.9",
         "packaging",  # wait for drf-yasg fix
         "deepmerge",
         "requests>=2.19",
         "mercantile>=1.0",
         "psycopg2>=2.7",
-        "Pillow>=5.3.0",
     ],
     extras_require={
         'dev': [
