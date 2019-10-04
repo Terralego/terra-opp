@@ -3,11 +3,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
 from django.contrib.postgres.fields import JSONField
 from django.utils.translation import ugettext_lazy as _
-from geostore.models import Feature
 from versatileimagefield.fields import VersatileImageField
 
-from terracommon.core.mixins import BaseUpdatableModel
-from terracommon.core.settings import STATES
+from terra_utils.mixins import BaseUpdatableModel
+from .settings import STATES, PICTURES_STATES_WORKFLOW
+from geostore.models import Feature
 
 
 class BaseLabelModel(BaseUpdatableModel):
@@ -23,7 +23,7 @@ class BaseLabelModel(BaseUpdatableModel):
 class ViewpointsManager(models.Manager):
     def with_accepted_pictures(self):
         return super().get_queryset().filter(
-            pictures__state=settings.STATES.ACCEPTED,
+            pictures__state=STATES.ACCEPTED,
         ).distinct()
 
 
@@ -48,7 +48,7 @@ class Viewpoint(BaseLabelModel):
         # Get only pictures created for the campaign
         picture = self.pictures.latest()
         if picture.created_at < self.created_at:
-            return settings.STATES.CHOICES_DICT[settings.STATES.MISSING]
+            return STATES.CHOICES_DICT[STATES.MISSING]
         return STATES.CHOICES_DICT[picture.state]
 
     class Meta:
@@ -144,6 +144,6 @@ class Picture(BaseUpdatableModel):
         ordering = ['-date']
 
     def save(self, *args, **kwargs):
-        if not settings.TROPP_PICTURES_STATES_WORKFLOW:
-            self.state = settings.STATES.ACCEPTED
+        if not PICTURES_STATES_WORKFLOW:
+            self.state = STATES.ACCEPTED
         super().save(*args, **kwargs)

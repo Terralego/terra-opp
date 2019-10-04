@@ -1,10 +1,9 @@
-from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Viewpoint
-
+from .settings import FEATURES_PROPERTIES_FROM_VIEWPOINT
 
 @receiver(post_save, sender=Viewpoint)
 def update_or_create_viewpoint(instance, **kwargs):
@@ -26,7 +25,7 @@ def update_or_create_viewpoint(instance, **kwargs):
         point.properties['viewpoint_picture'] = last_picture_sizes['thumbnail']
 
     # Add any specified viewpoint property in the feature's properties
-    for prop in settings.TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT:
+    for prop in FEATURES_PROPERTIES_FROM_VIEWPOINT:
         value = instance.properties.get(prop)
         if value is not None:
             point.properties[f'viewpoint_{prop}'] = value

@@ -6,16 +6,16 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from geostore.models import Feature
-from geostore.tests.factories import FeatureFactory
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from terracommon.accounts.tests.factories import TerraUserFactory
-from terracommon.core.settings import STATES
-from terracommon.tropp.models import Picture, Viewpoint
-from terracommon.tropp.tests.factories import ViewpointFactory
-from terracommon.trrequests.tests.mixins import TestPermissionsMixin
+from geostore.models import Feature
+from geostore.tests.factories import FeatureFactory
+from terra_opp.models import Picture, Viewpoint
+from terra_opp.tests.factories import ViewpointFactory
+from terra_opp.tests.mixins import TestPermissionsMixin
+from terra_opp.settings import STATES
 
 
 class ViewpointTestCase(APITestCase, TestPermissionsMixin):
@@ -397,7 +397,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             feature.properties['viewpoint_id']
         )
         self.assertEqual(
-            response.data['geometry']['coordinates'],
+            response.data['point']['coordinates'],
             [feature.geom.coords[0], feature.geom.coords[1]]
         )
 
@@ -405,31 +405,37 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(['change_viewpoint', ])
 
-        # We add a more recent picture to the viewpoint
+        # We create a more recent picture
         date = timezone.datetime(2019, 1, 1, tzinfo=timezone.utc)
         file = SimpleUploadedFile(
             name='test.jpg',
             content=open(
-                'terracommon/tropp/tests/placeholder.jpg',
+                'terra_opp/tests/placeholder.jpg',
                 'rb',
             ).read(),
             content_type='image/jpeg',
         )
+        picture = Picture.objects.create(
+            viewpoint=self.viewpoint_with_accepted_picture,
+            owner=self.user,
+            date=date,
+            file=file,
+            state=STATES.ACCEPTED,
+        )
         response = self.client.patch(
             reverse('tropp:viewpoint-detail', args=[
-                self.viewpoint_with_accepted_picture.pk]),
+                self.viewpoint_with_accepted_picture.pk,
+            ]),
             {
-                'picture.date': date,
-                'picture.file': file
+                'picture_ids': [picture.id]
             },
-            format='multipart',
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         viewpoint = Viewpoint.objects.get(
             pk=self.viewpoint_with_accepted_picture.pk
         )
-        self.assertEqual(2, len(viewpoint.pictures.all()))
+        self.assertEqual(1, viewpoint.pictures.count())
         self.assertIn(
             file.name.split('.')[0],
             viewpoint.pictures.latest().file.name
@@ -466,7 +472,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         file = SimpleUploadedFile(
             name='test.jpg',
             content=open(
-                'terracommon/tropp/tests/placeholder.jpg',
+                'terra_opp/tests/placeholder.jpg',
                 'rb',
             ).read(),
             content_type='image/jpeg',

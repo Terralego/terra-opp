@@ -2,7 +2,7 @@ import factory
 from django.utils import timezone
 from factory.django import FileField
 
-from terracommon.tropp.models import Campaign, Picture, Viewpoint
+from terra_opp.models import Campaign, Picture, Viewpoint
 
 
 class CampaignFactory(factory.DjangoModelFactory):
@@ -22,7 +22,7 @@ class ViewpointFactory(factory.DjangoModelFactory):
         'geostore.tests.factories.FeatureFactory'
     )
     pictures = factory.RelatedFactory(
-        'terracommon.tropp.tests.factories.PictureFactory', 'viewpoint'
+        'terra_opp.tests.factories.PictureFactory', 'viewpoint'
     )
 
     class Meta:
@@ -34,7 +34,7 @@ class PictureFactory(factory.DjangoModelFactory):
         'terracommon.accounts.tests.factories.TerraUserFactory'
     )
     date = timezone.datetime(2018, 1, 1, tzinfo=timezone.utc)
-    file = FileField(from_path='terracommon/tropp/tests/placeholder.jpg')
+    file = FileField(from_path='terra_opp/tests/placeholder.jpg')
 
     class Meta:
         model = Picture

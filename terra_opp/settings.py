@@ -1,37 +1,32 @@
-from ..core.settings import *
+from django.conf import settings
+from terra_utils.helpers import Choices
 
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+STATES = getattr(settings, 'TROPP_STATES', Choices(
+    ('DRAFT', 100, 'Draft'),
+    ('SUBMITTED', 200, 'Submitted'),
+    ('ACCEPTED', 300, 'Accepted'),
+    ('REFUSED', -1, 'Refused'),
+    ('CANCELLED', -100, 'Cancelled'),
+    ('MISSING', 0, 'Missing'),
+))
 
-INSTALLED_APPS += (
-    'versatileimagefield',
-)
+BASE_LAYER_NAME = getattr(settings, 'TROPP_BASE_LAYER_NAME', 'Base opp layer')
 
-VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
-    'tropp': [
-        ('original', 'url'),
-        ('full', 'thumbnail__1500x1125'),
-        ('list', 'thumbnail__300x225'),
-        ('thumbnail', 'thumbnail__180x120'),
-    ]
-}
+PICTURES_STATES_WORKFLOW = getattr(settings, 'TROPP_PICTURES_STATES_WORKFLOW', False)
 
-TROPP_BASE_LAYER_NAME = 'Base opp layer'
-
-TROPP_PICTURES_STATES_WORKFLOW = False
-
-TROPP_VIEWPOINT_PROPERTIES_SET = {
+VIEWPOINT_PROPERTIES_SET = getattr(settings, 'TROPP_VIEWPOINT_PROPERTIES_SET', {
     'pdf': {
         ('camera', 'Appareil photo'),
     },
     'form': {},
     'filter': {},
-}
+})
 
-TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT = [
+FEATURES_PROPERTIES_FROM_VIEWPOINT = getattr(settings, 'TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT', [
     'commune',
-]
+])
 
-TROPP_SEARCHABLE_PROPERTIES = {
+SEARCHABLE_PROPERTIES = getattr(settings, 'TROPP_SEARCHABLE_PROPERTIES', {
     'cities': {
         'json_key': 'commune',
         'type': 'single',
@@ -48,4 +43,4 @@ TROPP_SEARCHABLE_PROPERTIES = {
         'json_key': 'site',
         'type': 'text',
     },
-}
+})

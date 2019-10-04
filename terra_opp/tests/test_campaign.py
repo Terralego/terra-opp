@@ -5,9 +5,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from terracommon.accounts.tests.factories import TerraUserFactory
-from terracommon.core.settings import STATES
-from terracommon.tropp.tests.factories import CampaignFactory, ViewpointFactory
-from terracommon.trrequests.tests.mixins import TestPermissionsMixin
+from terra_opp.settings import STATES
+from terra_opp.tests.factories import CampaignFactory, ViewpointFactory
+from terra_opp.tests.mixins import TestPermissionsMixin
 
 
 class CampaignTestCase(TestPermissionsMixin, APITestCase):
@@ -46,8 +46,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, response.data.get('count'))
         self.assertEqual(
-            viewpoint.pictures.first().file.url.split('/'),
-            response.data.get('results')[0].get('picture').get('original').split('/')
+            viewpoint.pictures.first().file.url,
+            response.data.get('results')[0].get('picture').get('original')
         )
 
         response = self.client.get(campaign_url)
@@ -94,6 +94,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         viewpoint = ViewpointFactory()
         campaign.viewpoints.set([viewpoint])
         response = self.client.get(campaign_url)
+
         self.assertEqual(
             'Draft',
             response.data.get('viewpoints')[0].get('status')

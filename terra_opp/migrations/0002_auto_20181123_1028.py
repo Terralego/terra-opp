@@ -6,7 +6,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tropp', '0001_initial'),
+        ('terra_opp', '0001_initial'),
     ]
 
     operations = [

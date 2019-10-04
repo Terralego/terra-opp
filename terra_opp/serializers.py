@@ -1,14 +1,16 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from geostore.models import Feature, Layer
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_gis.fields import GeometryField
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
+from terracommon.accounts.serializers import UserProfileSerializer
 from terracommon.datastore.serializers import RelatedDocumentFileSerializer
+from geostore.models import Feature, Layer
 
+from .settings import BASE_LAYER_NAME, STATES
 from .models import Campaign, Picture, Viewpoint
 
 UserModel = get_user_model()
@@ -25,11 +27,11 @@ class PermissiveImageFieldSerializer(VersatileImageFieldSerializer):
 
 class SimpleViewpointSerializer(serializers.ModelSerializer):
     picture = SerializerMethodField()
-    geometry = GeometryField(source='point.geom', read_only=True)
+    point = GeometryField(source='point.geom')
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'picture', 'geometry')
+        fields = ('id', 'label', 'picture', 'point')
 
     def get_picture(self, viewpoint):
         try:
@@ -45,7 +47,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'picture', 'geometry', 'status')
+        fields = ('id', 'label', 'picture', 'point', 'status')
 
     def get_status(self, obj):
         """
@@ -55,10 +57,10 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
         try:
             last_pic = obj.ordered_pics[0]
             if last_pic.created_at < obj.created_at:
-                return settings.STATES.CHOICES_DICT[settings.STATES.MISSING]
-            return settings.STATES.CHOICES_DICT[last_pic.state]
+                return STATES.CHOICES_DICT[STATES.MISSING]
+            return STATES.CHOICES_DICT[last_pic.state]
         except IndexError:
-            return settings.STATES.CHOICES_DICT[settings.STATES.MISSING]
+            return STATES.CHOICES_DICT[STATES.MISSING]
 
 
 class CampaignSerializer(serializers.ModelSerializer):
@@ -105,7 +107,8 @@ class ListCampaignNestedSerializer(CampaignSerializer):
 
 
 class PictureSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source='owner.email')
+    owner = UserProfileSerializer(read_only=True)
+    file = VersatileImageFieldSerializer('tropp')
 
     class Meta:
         model = Picture
@@ -113,62 +116,52 @@ class PictureSerializer(serializers.ModelSerializer):
 
 
 class SimplePictureSerializer(PictureSerializer):
-    file = VersatileImageFieldSerializer('tropp')
-
     class Meta:
         model = Picture
         fields = ('id', 'date', 'file', 'owner', 'properties')
 
 
 class ViewpointSerializerWithPicture(serializers.ModelSerializer):
-    picture = SimplePictureSerializer(required=False, write_only=True)
+    picture_ids = serializers.PrimaryKeyRelatedField(
+        source='pictures',
+        queryset=Picture.objects.all(),
+        required=False,
+        many=True,
+    )
     pictures = SimplePictureSerializer(many=True, read_only=True)
     related = RelatedDocumentFileSerializer(many=True, read_only=True)
-    point = GeometryField(required=True, write_only=True)
-    geometry = GeometryField(source='point.geom', read_only=True)
+    point = GeometryField(source='point.geom')
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'geometry', 'properties', 'point', 'picture',
+        fields = ('id', 'label', 'properties', 'point', 'picture_ids',
                   'pictures', 'related')
 
     def create(self, validated_data):
         point_data = validated_data.pop('point', None)
         layer, created = Layer.objects.get_or_create(
-            name=settings.TROPP_BASE_LAYER_NAME
+            name=BASE_LAYER_NAME
         )
         feature = Feature.objects.create(
-            geom=point_data,
+            geom=point_data.get('geom'),
             layer=layer,
             properties={},
         )
         validated_data.setdefault('point', feature)
 
-        picture_data = validated_data.pop('picture', None)
-        viewpoint = super().create(validated_data)
-        if picture_data:
-            Picture.objects.create(
-                viewpoint=viewpoint,
-                owner=self.context['request'].user,
-                **picture_data,
-            )
-
-        return viewpoint
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        picture_data = validated_data.pop('picture', None)
-        if picture_data:
-            Picture.objects.create(
-                viewpoint=instance,
-                owner=self.context['request'].user,
-                **picture_data,
-            )
-
         point_data = validated_data.pop('point', None)
         if point_data:
             feature = instance.point
-            feature.geom = point_data
+            feature.geom = point_data.get('geom')
             feature.save()
+
+        # Remove pictures no longer associated with viewpoint
+        if 'pictures' in validated_data:
+            picture_ids = [p.pk for p in validated_data['pictures']]
+            instance.pictures.exclude(pk__in=picture_ids).delete()
 
         return super().update(instance, validated_data)
 
@@ -177,11 +170,3 @@ class ViewpointLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Viewpoint
         fields = ('id', 'label')
-
-
-class PhotographerLabelSerializer(serializers.ModelSerializer):
-    label = serializers.CharField(source='__str__')
-
-    class Meta:
-        model = get_user_model()
-        fields = ('uuid', 'label')

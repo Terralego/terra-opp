@@ -7,7 +7,7 @@ import django.db.models.expressions
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tropp', '0005_remove_document'),
+        ('terra_opp', '0005_remove_document'),
     ]
 
     operations = [

@@ -8,7 +8,7 @@ from django.db.models import Q
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
-from terracommon.core.settings import STATES
+from .settings import STATES, SEARCHABLE_PROPERTIES
 
 
 class CampaignFilterBackend(filters.BaseFilterBackend):
@@ -78,7 +78,7 @@ class CampaignFilterBackend(filters.BaseFilterBackend):
 
 class JsonFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
+        for key, field in SEARCHABLE_PROPERTIES.items():
             search_key = f'properties__{field["json_key"]}'
             if field['type'] == 'many':
                 search_item = request.GET.getlist(f'{search_key}[]')

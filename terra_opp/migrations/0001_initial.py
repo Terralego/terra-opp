@@ -85,7 +85,7 @@ class Migration(migrations.Migration):
                 ('label', models.CharField(max_length=100, verbose_name='Label')),
                 ('properties', django.contrib.postgres.fields.jsonb.JSONField(blank=True, default=dict, verbose_name='Properties')),
                 ('point', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='points', to='geostore.Feature')),
-                ('themes', models.ManyToManyField(blank=True, related_name='viewpoints', to='tropp.Theme')),
+                ('themes', models.ManyToManyField(blank=True, related_name='viewpoints', to='terra_opp.Theme')),
             ],
             options={
                 'ordering': ['-created_at'],
@@ -95,17 +95,17 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='picture',
             name='viewpoint',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pictures', to='tropp.Viewpoint'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pictures', to='terra_opp.Viewpoint'),
         ),
         migrations.AddField(
             model_name='document',
             name='viewpoint',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='tropp.Viewpoint'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='documents', to='terra_opp.Viewpoint'),
         ),
         migrations.AddField(
             model_name='campaign',
             name='viewpoints',
-            field=models.ManyToManyField(related_name='campaigns', to='tropp.Viewpoint'),
+            field=models.ManyToManyField(related_name='campaigns', to='terra_opp.Viewpoint'),
         ),
         migrations.AddIndex(
             model_name='picture',

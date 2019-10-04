@@ -7,7 +7,7 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tropp', '0006_picture_order_by'),
+        ('terra_opp', '0006_picture_order_by'),
     ]
 
     operations = [

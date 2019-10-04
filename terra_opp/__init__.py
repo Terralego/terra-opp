@@ -1,1 +1,1 @@
-default_app_config = 'terracommon.tropp.apps.TroppConfig'
+default_app_config = 'terra_opp.apps.TerraOppConfig'

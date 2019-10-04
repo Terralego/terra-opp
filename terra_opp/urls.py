@@ -3,7 +3,7 @@ from rest_framework.routers import SimpleRouter
 
 from . import views
 
-app_name = 'terra_opp'
+app_name = 'tropp'
 
 router = SimpleRouter()
 
