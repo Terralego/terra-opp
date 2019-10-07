@@ -181,7 +181,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
                      to_attr='ordered_pics')
         )
         if (self.action == 'list'
-                and not user.has_perm('tropp.manage_all_campaigns')):
+                and not user.has_perm('terra_opp.manage_all_campaigns')):
             return qs.filter(assignee=user)
         return qs
 
@@ -190,7 +190,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def check_object_permissions(self, request, obj: Campaign):
         # Prevent acting on unassigned campaigns for photographs
-        if (not request.user.has_perm('tropp.manage_all_campaigns')
+        if (not request.user.has_perm('terra_opp.manage_all_campaigns')
                 and obj.assignee != request.user):
             self.permission_denied(request)
         super().check_object_permissions(request, obj)
