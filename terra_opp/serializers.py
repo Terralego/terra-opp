@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
@@ -138,6 +140,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
                   'pictures', 'related')
 
     def create(self, validated_data):
+        related_docs = validated_data.pop('related', None)
         point_data = validated_data.pop('point', None)
         layer, created = Layer.objects.get_or_create(
             name=settings.TROPP_BASE_LAYER_NAME
@@ -149,7 +152,9 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         )
         validated_data.setdefault('point', feature)
 
-        return super().create(validated_data)
+        instance = super().create(validated_data)
+        self.handle_related_documents(instance, related_docs)
+        return instance
 
     def update(self, instance, validated_data):
         point_data = validated_data.pop('point', None)
@@ -163,8 +168,14 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             picture_ids = [p.pk for p in validated_data['pictures']]
             instance.pictures.exclude(pk__in=picture_ids).delete()
 
-        # Handle related documents
         related_docs = validated_data.pop('related', None)
+        self.handle_related_documents(instance, related_docs)
+
+        return super().update(instance, validated_data)
+
+    @staticmethod
+    def handle_related_documents(instance: Viewpoint,
+                                 related_docs: Optional[list]):
         if related_docs is not None:
             # Remove stale
             instance.related.exclude(
@@ -180,8 +191,6 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
                     existing.save()
                 except RelatedDocument.DoesNotExist:
                     RelatedDocument(**related, linked_object=instance).save()
-
-        return super().update(instance, validated_data)
 
 
 class ViewpointLabelSerializer(serializers.ModelSerializer):
