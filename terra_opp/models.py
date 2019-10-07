@@ -6,9 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from versatileimagefield.fields import VersatileImageField
 
 from terra_utils.mixins import BaseUpdatableModel
-from .settings import STATES, PICTURES_STATES_WORKFLOW
 from geostore.models import Feature
-
+from .settings import TROPP_STATES as DEFAULT_TROPP_STATES
 
 class BaseLabelModel(BaseUpdatableModel):
     label = models.CharField(_('Label'), max_length=100)
@@ -23,7 +22,7 @@ class BaseLabelModel(BaseUpdatableModel):
 class ViewpointsManager(models.Manager):
     def with_accepted_pictures(self):
         return super().get_queryset().filter(
-            pictures__state=STATES.ACCEPTED,
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
         ).distinct()
 
 
@@ -47,6 +46,7 @@ class Viewpoint(BaseLabelModel):
         """
         # Get only pictures created for the campaign
         picture = self.pictures.latest()
+        STATES = settings.TROPP_STATES
         if picture.created_at < self.created_at:
             return STATES.CHOICES_DICT[STATES.MISSING]
         return STATES.CHOICES_DICT[picture.state]
@@ -83,10 +83,10 @@ class Campaign(BaseLabelModel):
                 pictures__isnull=True
             )),
             pending=models.Count('pictures', filter=models.Q(
-                pictures__state=STATES.DRAFT
+                pictures__state=settings.TROPP_STATES.DRAFT
             )),
             refused=models.Count('pictures', filter=models.Q(
-                pictures__state=STATES.REFUSED
+                pictures__state=settings.TROPP_STATES.REFUSED
             )),
         ).values('missing', 'pending', 'refused')
         try:
@@ -97,7 +97,7 @@ class Campaign(BaseLabelModel):
     @property
     def status(self):
         return not self.viewpoints.exclude(
-            pictures__state=STATES.ACCEPTED,
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
         ).exists()
 
     class Meta:
@@ -120,7 +120,10 @@ class Picture(BaseUpdatableModel):
         related_name='pictures',
     )
     # States may be : draft, metadata_ok (submitted), accepted, refused
-    state = models.IntegerField(_('State'), default=STATES.DRAFT)
+    state = models.IntegerField(
+        _('State'),
+        default=getattr(settings, 'TROPP_STATES', DEFAULT_TROPP_STATES).DRAFT,
+    )
 
     properties = JSONField(_('Properties'), default=dict, blank=True)
     file = VersatileImageField(_('File'))
@@ -144,6 +147,6 @@ class Picture(BaseUpdatableModel):
         ordering = ['-date']
 
     def save(self, *args, **kwargs):
-        if not PICTURES_STATES_WORKFLOW:
-            self.state = STATES.ACCEPTED
+        if not settings.TROPP_PICTURES_STATES_WORKFLOW:
+            self.state = settings.TROPP_STATES.ACCEPTED
         super().save(*args, **kwargs)

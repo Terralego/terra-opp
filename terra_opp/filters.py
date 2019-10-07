@@ -8,8 +8,6 @@ from django.db.models import Q
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
 
-from .settings import STATES, SEARCHABLE_PROPERTIES
-
 
 class CampaignFilterBackend(filters.BaseFilterBackend):
     """
@@ -19,10 +17,10 @@ class CampaignFilterBackend(filters.BaseFilterBackend):
     def get_schema_fields(self, view):
         super().get_schema_fields(view)
         choices = {
-            STATES.DRAFT: 'Incomplete metadata',
-            STATES.SUBMITTED: 'Pending validation',
-            STATES.REFUSED: 'Refused',
-            STATES.ACCEPTED: 'Validated',
+            settings.TROPP_STATES.DRAFT: 'Incomplete metadata',
+            settings.TROPP_STATES.SUBMITTED: 'Pending validation',
+            settings.TROPP_STATES.REFUSED: 'Refused',
+            settings.TROPP_STATES.ACCEPTED: 'Validated',
         }
         return [
             coreapi.Field(
@@ -47,6 +45,7 @@ class CampaignFilterBackend(filters.BaseFilterBackend):
         ]
 
     def filter_queryset(self, request, queryset, view):
+        STATES = settings.TROPP_STATES
         status = request.GET.get('status', None)
         if status is not None:
             try:
@@ -78,7 +77,7 @@ class CampaignFilterBackend(filters.BaseFilterBackend):
 
 class JsonFilterBackend(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        for key, field in SEARCHABLE_PROPERTIES.items():
+        for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
             search_key = f'properties__{field["json_key"]}'
             if field['type'] == 'many':
                 search_item = request.GET.getlist(f'{search_key}[]')

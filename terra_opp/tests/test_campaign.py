@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import resolve_url
 from django.test import override_settings
 from django.urls import reverse
@@ -5,7 +6,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from terracommon.accounts.tests.factories import TerraUserFactory
-from terra_opp.settings import STATES
 from terra_opp.tests.factories import CampaignFactory, ViewpointFactory
 from terra_opp.tests.mixins import TestPermissionsMixin
 
@@ -123,7 +123,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         response = self.client.get(list_url, {'picture_status': 200})
         self.assertEqual(0, response.data.get('count'))
 
-        viewpoint.pictures.update(state=STATES.ACCEPTED)
+        viewpoint.pictures.update(state=settings.TROPP_STATES.ACCEPTED)
         response = self.client.get(list_url, {'status': 0})
         self.assertEqual(0, response.data.get('count'))
         response = self.client.get(list_url, {'status': 1})

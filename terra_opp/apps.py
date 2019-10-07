@@ -12,3 +12,8 @@ class TerraOppConfig(AppConfig):
             raise ImproperlyConfigured(
                 f"'{self.name}' needs 'versatileimagefield' in INSTALLED_APPS"
             )
+
+        from . import settings as defaults
+        dj_settings = settings._wrapped.__dict__
+        for name in dir(defaults):
+            dj_settings.setdefault(name, getattr(defaults, name))

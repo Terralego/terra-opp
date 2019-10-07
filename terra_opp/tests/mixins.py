@@ -1,9 +1,4 @@
-from django.test.signals import setting_changed
-from django.apps import apps
 from django.contrib.auth.models import Permission
-from django.conf import UserSettingsHolder
-from django.test.utils import TestContextDecorator
-from terra_opp import settings
 
 
 class TestPermissionsMixin:

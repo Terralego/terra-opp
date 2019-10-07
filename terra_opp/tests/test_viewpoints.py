@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import override_settings
@@ -15,7 +16,6 @@ from geostore.tests.factories import FeatureFactory
 from terra_opp.models import Picture, Viewpoint
 from terra_opp.tests.factories import ViewpointFactory
 from terra_opp.tests.mixins import TestPermissionsMixin
-from terra_opp.settings import STATES
 
 
 class ViewpointTestCase(APITestCase, TestPermissionsMixin):
@@ -29,7 +29,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Create viewpoint with accepted picture attached to it
         cls.viewpoint_with_accepted_picture = ViewpointFactory(
             label="Viewpoint with accepted picture",
-            pictures__state=STATES.ACCEPTED,
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
             properties={'test_update': 'ko'},
         )
         # Create viewpoints with no picture attached to it
@@ -231,7 +231,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         list_url = reverse('tropp:viewpoint-list')
         ViewpointFactory(
             label="Viewpoint for search",
-            pictures__state=STATES.ACCEPTED,
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
             properties={
                 "commune": "Rouperou-le-coquet",
                 "themes": ['foo', 'bar', 'baz'],
@@ -420,7 +420,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             owner=self.user,
             date=date,
             file=file,
-            state=STATES.ACCEPTED,
+            state=settings.TROPP_STATES.ACCEPTED,
         )
         response = self.client.patch(
             reverse('tropp:viewpoint-detail', args=[
@@ -482,7 +482,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             owner=self.user,
             date=date,
             file=file,
-            state=STATES.ACCEPTED,
+            state=settings.TROPP_STATES.ACCEPTED,
         )
 
         # Viewpoint should appears only once in the list
