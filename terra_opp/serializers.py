@@ -10,7 +10,6 @@ from terracommon.accounts.serializers import UserProfileSerializer
 from terracommon.datastore.serializers import RelatedDocumentFileSerializer
 from geostore.models import Feature, Layer
 
-from .settings import BASE_LAYER_NAME, STATES
 from .models import Campaign, Picture, Viewpoint
 
 UserModel = get_user_model()
@@ -54,6 +53,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
         :return: string (missing, draft, submitted, accepted)
         """
         # Get only pictures created for the campaign
+        STATES = settings.TROPP_STATES
         try:
             last_pic = obj.ordered_pics[0]
             if last_pic.created_at < obj.created_at:
@@ -140,7 +140,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     def create(self, validated_data):
         point_data = validated_data.pop('point', None)
         layer, created = Layer.objects.get_or_create(
-            name=BASE_LAYER_NAME
+            name=settings.TROPP_BASE_LAYER_NAME
         )
         feature = Feature.objects.create(
             geom=point_data.get('geom'),

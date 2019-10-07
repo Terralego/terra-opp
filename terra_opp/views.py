@@ -19,7 +19,6 @@ from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBacken
 from .renderers import PdfRenderer, ZipRenderer
 from .filters import CampaignFilterBackend, JsonFilterBackend
 from .serializers import *
-from .settings import STATES, SEARCHABLE_PROPERTIES, VIEWPOINT_PROPERTIES_SET
 
 
 class ViewpointPdf(RetrieveAPIView):
@@ -33,7 +32,7 @@ class ViewpointPdf(RetrieveAPIView):
 
     @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
-        properties_set = VIEWPOINT_PROPERTIES_SET['pdf']
+        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET['pdf']
         return Response({
             'viewpoint': self.get_object(),
             'properties_set': properties_set,
@@ -51,7 +50,7 @@ class ViewpointZipPictures(RetrieveAPIView):
     @method_decorator(cache_page(60 * 5))
     def get(self, request, *args, **kwargs):
         qs = self.get_object().pictures.filter(
-            state__gte=STATES.ACCEPTED,
+            state__gte=settings.TROPP_STATES.ACCEPTED,
         ).only('file')
         return Response([p.file for p in qs])
 
@@ -137,7 +136,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     @action(detail=False)
     def filters(self, request, *args, **kwargs):
         filter_values = {}
-        for key, field in SEARCHABLE_PROPERTIES.items():
+        for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
             data = None
             transform = KeyTransform(field['json_key'], 'properties')
             queryset = (Viewpoint.objects
