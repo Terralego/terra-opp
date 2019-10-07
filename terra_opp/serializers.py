@@ -1,14 +1,14 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from geostore.models import Feature, Layer
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_gis.fields import GeometryField
-from versatileimagefield.serializers import VersatileImageFieldSerializer
-
 from terra_accounts.serializers import UserProfileSerializer
+from terracommon.datastore.models import RelatedDocument
 from terracommon.datastore.serializers import RelatedDocumentFileSerializer
-from geostore.models import Feature, Layer
+from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Campaign, Picture, Viewpoint
 
@@ -129,7 +129,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         many=True,
     )
     pictures = SimplePictureSerializer(many=True, read_only=True)
-    related = RelatedDocumentFileSerializer(many=True, read_only=True)
+    related = RelatedDocumentSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
 
     class Meta:
@@ -162,6 +162,24 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         if 'pictures' in validated_data:
             picture_ids = [p.pk for p in validated_data['pictures']]
             instance.pictures.exclude(pk__in=picture_ids).delete()
+
+        # Handle related documents
+        related_docs = validated_data.pop('related', None)
+        if related_docs is not None:
+            # Remove stale
+            instance.related.exclude(
+                key__in=[r['key'] for r in related_docs]
+            ).delete()
+            for related in related_docs:
+                file = related['document']
+                extension = file.content_type.split('/')[1]
+                file.name = f"{related['key']}.{extension}"
+                try:
+                    existing = instance.related.get(key=related['key'])
+                    existing.document = file
+                    existing.save()
+                except RelatedDocument.DoesNotExist:
+                    RelatedDocument(**related, linked_object=instance).save()
 
         return super().update(instance, validated_data)
 
