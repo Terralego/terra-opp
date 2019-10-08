@@ -5,7 +5,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from terracommon.accounts.tests.factories import TerraUserFactory
+from terra_accounts.tests.factories import TerraUserFactory
 from terra_opp.tests.factories import CampaignFactory, ViewpointFactory
 from terra_opp.tests.mixins import TestPermissionsMixin
 

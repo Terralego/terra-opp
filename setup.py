@@ -37,6 +37,7 @@ setup(
     install_requires=[
         'Django==2.2.5',
         'terra-common>=0.3.1,<0.4',
+        'django-terra-accounts>=0.3.3,<0.4',
         "django-terra-utils>=0.3.6",
         "drf-yasg>=1.9",
         "packaging",  # wait for drf-yasg fix
