@@ -10,7 +10,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from terracommon.accounts.tests.factories import TerraUserFactory
+from terra_accounts.tests.factories import TerraUserFactory
 from geostore.models import Feature
 from geostore.tests.factories import FeatureFactory
 from terra_opp.models import Picture, Viewpoint
