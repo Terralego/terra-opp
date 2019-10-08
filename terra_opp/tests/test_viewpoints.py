@@ -1,9 +1,11 @@
+import base64
 import os
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.files.uploadedfile import SimpleUploadedFile
+from django.core.files.uploadedfile import SimpleUploadedFile, UploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -314,6 +316,52 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertIn('placeholder', Feature.objects.get(
             id=self.viewpoint_with_accepted_picture.point.id
         ).properties['viewpoint_picture'])
+
+    @patch('terracommon.datastore.fields.FileBase64Field.to_internal_value')
+    def test_viewpoint_create_with_related_docs(self, field):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['add_viewpoint', 'change_viewpoint'])
+        self.fp.seek(0)
+        document = (f'data:image/jpg;base64,'
+                    f'{(base64.b64encode(self.fp.read())).decode("utf-8")}')
+        field.return_value = UploadedFile(
+            self.fp,
+            content_type='image/jpeg',
+        )
+        response = self.client.post(
+            reverse('tropp:viewpoint-list'),
+            {
+                "label": "Viewpoint created with picture",
+                "point": self.feature.geom.json,
+                "related": [{
+                    "key": "croquis",
+                    "document": document,
+                }]
+            },
+            format="json",
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        data = response.json()
+        self.assertEqual(1, len(data['related']))
+        self.assertEqual('croquis', data['related'][0]['key'])
+
+        # Update it
+        response = self.client.patch(
+            reverse('tropp:viewpoint-detail', args=[data['id']]),
+            {
+                "related": [{
+                    "key": "emplacement",
+                    "document": document,
+                }]
+            },
+            format="json",
+        )
+        # Request is correctly constructed and viewpoint has been updated
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        data = response.json()
+        self.assertEqual(1, len(data['related']))
+        self.assertEqual('emplacement', data['related'][0]['key'])
 
     def _viewpoint_delete(self):
         return self.client.delete(
