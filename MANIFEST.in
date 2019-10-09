@@ -1,0 +1,3 @@
+include *.md
+recursive-include terra_opp *.md
+recursive-exclude terra_opp/tests/
