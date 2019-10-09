@@ -20,7 +20,7 @@ def update_or_create_viewpoint(instance, **kwargs):
     # Add thumbnail representation in the feature's properties
     if instance.pictures.exists():
         last_picture_sizes = VersatileImageFieldSerializer(
-            'tropp'
+            'terra_opp'
         ).to_representation(instance.pictures.latest().file)
         point.properties['viewpoint_picture'] = last_picture_sizes['thumbnail']
 

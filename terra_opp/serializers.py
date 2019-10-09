@@ -36,7 +36,7 @@ class SimpleViewpointSerializer(serializers.ModelSerializer):
 
     def get_picture(self, viewpoint):
         try:
-            return VersatileImageFieldSerializer('tropp').to_native(
+            return VersatileImageFieldSerializer('terra_opp').to_native(
                 viewpoint.ordered_pics[0].file
             )
         except IndexError:
@@ -93,7 +93,7 @@ class DetailAuthenticatedCampaignNestedSerializer(serializers.ModelSerializer):
 
 class ListCampaignNestedSerializer(CampaignSerializer):
     picture = PermissiveImageFieldSerializer(
-        'tropp',
+        'terra_opp',
         source='viewpoints.first.pictures.first.file',
     )
     # Override to expose typed data
@@ -110,7 +110,7 @@ class ListCampaignNestedSerializer(CampaignSerializer):
 
 class PictureSerializer(serializers.ModelSerializer):
     owner = UserProfileSerializer(read_only=True)
-    file = VersatileImageFieldSerializer('tropp')
+    file = VersatileImageFieldSerializer('terra_opp')
 
     class Meta:
         model = Picture
