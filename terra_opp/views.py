@@ -26,7 +26,7 @@ class ViewpointPdf(RetrieveAPIView):
     Return a pdf representation of the given viewpoint by its id.
     """
     queryset = Viewpoint.objects.all()
-    template_name = 'tropp/viewpoint_pdf.html'
+    template_name = 'terra_opp/viewpoint_pdf.html'
     renderer_classes = (PdfRenderer,)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 

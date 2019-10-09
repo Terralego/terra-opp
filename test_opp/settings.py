@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'django.contrib.staticfiles',
     'versatileimagefield',
-    'terracommon.accounts',
+    'terra_accounts',
     'terracommon.datastore',
     'geostore',
     'rest_framework',
@@ -172,7 +172,7 @@ AWS_DEFAULT_ACL = None
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
-    'tropp': [
+    'terra_opp': [
         ('original', 'url'),
         ('full', 'thumbnail__1500x1125'),
         ('list', 'thumbnail__300x225'),
@@ -180,4 +180,4 @@ VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
     ]
 }
 
-AUTH_USER_MODEL = 'accounts.TerraUser'
+AUTH_USER_MODEL = 'terra_accounts.TerraUser'
