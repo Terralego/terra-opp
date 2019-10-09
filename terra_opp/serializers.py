@@ -117,6 +117,14 @@ class PictureSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PictureUpdateSerializer(PictureSerializer):
+    file = VersatileImageFieldSerializer('tropp', required=False)
+
+    class Meta:
+        model = Picture
+        fields = '__all__'
+
+
 class SimplePictureSerializer(PictureSerializer):
     class Meta:
         model = Picture
