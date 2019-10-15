@@ -48,7 +48,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'picture', 'point', 'status')
+        fields = ('id', 'label', 'picture', 'point', 'status', 'properties')
 
     def get_status(self, obj):
         """
