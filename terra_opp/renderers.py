@@ -45,7 +45,8 @@ def django_url_fetcher(url):
             settings.AWS_S3_ENDPOINT_URL + settings.AWS_STORAGE_BUCKET_NAME
         )
 
-    elif url_path.startswith(settings.MEDIA_URL):  # media file from filesystem
+    elif settings.MEDIA_URL and url_path.startswith(settings.MEDIA_URL):
+        # media file from filesystem
         path = url_path.replace(settings.MEDIA_URL, settings.MEDIA_ROOT)
         data['file_obj'] = default_storage.open(path)
         return data
