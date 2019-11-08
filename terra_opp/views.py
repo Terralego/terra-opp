@@ -1,3 +1,4 @@
+import io
 import operator
 from functools import reduce
 
@@ -9,6 +10,7 @@ from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.core.cache import cache
 from django.db.models import Prefetch
 from django.db import models
+from django.template import loader
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
@@ -28,7 +30,7 @@ from .filters import (
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .point_utilities import remove_point_thumbnail, update_point_properties
-from .renderers import PdfRenderer, ZipRenderer
+from .renderers import PdfRenderer, ZipRenderer, write_pdf
 from . import permissions
 
 from .serializers import (
@@ -366,3 +368,31 @@ class CampaignViewSet(viewsets.ModelViewSet):
             return CampaignSerializer
 
         return RoCampaignSerializer
+
+    @method_decorator(cache_page(60 * 5))
+    @action(
+        detail=True,
+        renderer_classes=[ZipRenderer],
+    )
+    def all_sheet(self, request, *args, **kwargs):
+        viewpoints = self.get_object().viewpoints.all()
+
+        pdfs = []
+
+        for viewpoint in viewpoints:
+            template = loader.select_template(["terra_opp/viewpoint_pdf.html"])
+            html = template.render(
+                context={
+                    "viewpoint": viewpoint,
+                    "properties_set": settings.TROPP_VIEWPOINT_PROPERTIES_SET["pdf"],
+                }
+            )
+
+            pdf_bytes = write_pdf(request, html)
+
+            stream = io.BytesIO(pdf_bytes)
+            stream.name = f"viewpoint_{viewpoint.pk}.pdf"
+
+            pdfs.append(stream)
+
+        return Response(pdfs)
