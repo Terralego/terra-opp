@@ -47,6 +47,22 @@ def django_url_fetcher(url, *args, **kwargs):
     return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 
+def write_pdf(request, html):
+    """
+    Function used to write pdf from html
+    :param request: Django request
+    :param html: HTML string
+    :return: pdf as bytes
+    """
+    base_url = request.build_absolute_uri("/")
+
+    return weasyprint.HTML(
+        string=html,
+        base_url=base_url,
+        url_fetcher=django_url_fetcher,
+    ).write_pdf()
+
+
 class PdfRenderer(renderers.TemplateHTMLRenderer):
     media_type = "application/pdf"
     format = "pdf"
@@ -58,15 +74,7 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
             accepted_media_type=accepted_media_type,
             renderer_context=renderer_context,
         )
-        request = renderer_context["request"]
-        base_url = request.build_absolute_uri("/")
-
-        kwargs = {}
-        return weasyprint.HTML(
-            string=html,
-            base_url=base_url,
-            url_fetcher=import_string(settings.TROPP_URL_FETCHER),
-        ).write_pdf(**kwargs)
+        return write_pdf(renderer_context["request"], html)
 
 
 class ZipRenderer(renderers.JSONRenderer):
@@ -80,7 +88,7 @@ class ZipRenderer(renderers.JSONRenderer):
                     for file in data:
                         archive.writestr(
                             os.path.basename(file.name),
-                            file.open().read(),
+                            file.read(),
                         )
                 tmp.seek(0)
                 return tmp.read()
