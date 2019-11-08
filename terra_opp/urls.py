@@ -24,4 +24,9 @@ urlpatterns += [
         views.ViewpointZipPictures.as_view(),
         name='viewpoint-zip',
     ),
+    path(
+        'campaigns/<int:pk>/zip-pdf',
+        views.CampaignZipViewpointPdf.as_view(),
+        name='campaign-zip',
+    )
 ]

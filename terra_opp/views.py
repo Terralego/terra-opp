@@ -1,3 +1,4 @@
+import io
 import operator
 from collections import OrderedDict
 from functools import reduce
@@ -6,6 +7,7 @@ import coreapi
 import coreschema
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.db.models import Prefetch
+from django.template import loader
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from rest_framework import permissions, viewsets
@@ -16,7 +18,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
-from .renderers import PdfRenderer, ZipRenderer
+from .renderers import PdfRenderer, ZipRenderer, write_pdf
 from .filters import CampaignFilterBackend, JsonFilterBackend
 from .serializers import *
 
@@ -39,6 +41,35 @@ class ViewpointPdf(RetrieveAPIView):
         })
 
 
+class CampaignZipViewpointPdf(RetrieveAPIView):
+    """
+    Return all pdf representation of the given viewpoint by its related campaign id.
+    """
+    queryset = Campaign.objects.all()
+    renderer_classes = (ZipRenderer,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    @method_decorator(cache_page(60 * 5))
+    def get(self, request, *args, **kwargs):
+        viewpoints = self.get_object().viewpoints.all()
+        pdfs = []
+        for viewpoint in viewpoints:
+            template = loader.select_template(['terra_opp/viewpoint_pdf.html'])
+            html = template.render(context={
+                'viewpoint': viewpoint,
+                'properties_set': settings.TROPP_VIEWPOINT_PROPERTIES_SET['pdf'],
+            })
+
+            pdf_bytes = write_pdf(request, html)
+
+            stream = io.BytesIO(pdf_bytes)
+            stream.name = f'viewpoint_{viewpoint.pk}.pdf'
+
+            pdfs.append(stream)
+
+        return Response(pdfs)
+
+
 class ViewpointZipPictures(RetrieveAPIView):
     """
     Return a zip archive of all pictures
@@ -52,7 +83,7 @@ class ViewpointZipPictures(RetrieveAPIView):
         qs = self.get_object().pictures.filter(
             state__gte=settings.TROPP_STATES.ACCEPTED,
         ).only('file')
-        return Response([p.file for p in qs])
+        return Response([p.file.open() for p in qs])
 
 
 class RestPageNumberPagination(PageNumberPagination):
