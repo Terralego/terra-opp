@@ -35,7 +35,7 @@ setup(
         'Programming Language :: Python :: 3.7',
     ],
     install_requires=[
-        'Django==2.2.5',
+        'Django==2.2.8',
         'terra-common>=0.3.1,<0.4',
         'django-terra-accounts>=0.3.3,<0.4',
         "django-terra-utils>=0.3.6",
