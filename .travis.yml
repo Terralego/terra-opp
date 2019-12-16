@@ -9,7 +9,7 @@ python:
 env:
   matrix:
   - DJANGO_VERSION=2.2.*
-  #- DJANGO_VERSION=3.0.*  wait for django-versatilrimagefield django 3.0 support
+  #- DJANGO_VERSION=3.0.*  wait for django-versatileimagefield django 3.0 support
   #- DJANGO_VERSION=dev
 
 services:
