@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     install_requires=[
-        'Django>=2.2,<3.0',  # wiat for django-versatileimagefield django 3.0 compatibility
+        'Django>=2.2,<3.0',  # wait for django-versatileimagefield django 3.0 compatibility
         'terra-common>=0.3.1,<0.4',
         'django-terra-accounts>=0.3.3',
         "django-terra-utils>=0.3.6",
