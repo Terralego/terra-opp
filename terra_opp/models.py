@@ -9,6 +9,7 @@ from terra_utils.mixins import BaseUpdatableModel
 from geostore.models import Feature
 from .settings import TROPP_STATES as DEFAULT_TROPP_STATES
 
+
 class BaseLabelModel(BaseUpdatableModel):
     label = models.CharField(_('Label'), max_length=100)
 

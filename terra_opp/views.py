@@ -1,9 +1,10 @@
 import operator
-from collections import OrderedDict
 from functools import reduce
 
 import coreapi
 import coreschema
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
@@ -12,13 +13,25 @@ from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import RetrieveAPIView
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from terra_accounts.serializers import UserProfileSerializer
 
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
-from .renderers import PdfRenderer, ZipRenderer
+
 from .filters import CampaignFilterBackend, JsonFilterBackend
-from .serializers import *
+from .models import Campaign, Picture, Viewpoint
+from .pagination import RestPageNumberPagination
+from .renderers import PdfRenderer, ZipRenderer
+from .serializers import (
+    CampaignSerializer,
+    DetailAuthenticatedCampaignNestedSerializer,
+    DetailCampaignNestedSerializer,
+    ListCampaignNestedSerializer,
+    PictureSerializer,
+    SimpleAuthenticatedViewpointSerializer,
+    SimpleViewpointSerializer,
+    ViewpointSerializerWithPicture,
+)
 
 
 class ViewpointPdf(RetrieveAPIView):
@@ -53,26 +66,6 @@ class ViewpointZipPictures(RetrieveAPIView):
             state__gte=settings.TROPP_STATES.ACCEPTED,
         ).only('file')
         return Response([p.file for p in qs])
-
-
-class RestPageNumberPagination(PageNumberPagination):
-    page_size_query_param = 'page_size'
-
-    def get_paginated_response(self, data):
-        page = self.page
-
-        next_page = page.next_page_number() if page.has_next() else None
-        previous_page = (page.previous_page_number() if page.has_previous()
-                         else None)
-
-        return Response(OrderedDict([
-            ('count', page.paginator.count),
-            ('num_pages', page.paginator.num_pages),
-            ('next', next_page),
-            ('previous', previous_page),
-            ('page_size', self.get_page_size(self.request)),
-            ('results', data),
-        ]))
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -180,8 +173,8 @@ class CampaignViewSet(viewsets.ModelViewSet):
             Prefetch('viewpoints__pictures', queryset=pictures_qs,
                      to_attr='ordered_pics')
         )
-        if (self.action == 'list'
-                and not user.has_perm('terra_opp.manage_all_campaigns')):
+        if (self.action == 'list' and
+                not user.has_perm('terra_opp.manage_all_campaigns')):
             return qs.filter(assignee=user)
         return qs
 
@@ -190,8 +183,8 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def check_object_permissions(self, request, obj: Campaign):
         # Prevent acting on unassigned campaigns for photographs
-        if (not request.user.has_perm('terra_opp.manage_all_campaigns')
-                and obj.assignee != request.user):
+        if (not request.user.has_perm('terra_opp.manage_all_campaigns') and
+                obj.assignee != request.user):
             self.permission_denied(request)
         super().check_object_permissions(request, obj)
 

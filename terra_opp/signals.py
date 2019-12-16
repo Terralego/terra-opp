@@ -5,6 +5,7 @@ from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Viewpoint
 
+
 @receiver(post_save, sender=Viewpoint)
 def update_or_create_viewpoint(instance, **kwargs):
     """
