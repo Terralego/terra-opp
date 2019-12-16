@@ -32,8 +32,7 @@ install:
 - pip install coverage codecov
 - if [[ $DJANGO_VERSION == dev ]]; then pip install -e git+https://github.com/django/django@master#egg=django;
   else pip install Django==$DJANGO_VERSION -U; fi
-- if [[ $REST_VERSION == dev ]]; then pip install -e git+https://github.com/encode/django-rest-framework.git@master#egg=django-rest-framework;
-  else pip install djangorestframework==$REST_VERSION -U; fi
+
 before_script:
 - psql -c "CREATE USER travis_ci_test WITH ENCRYPTED PASSWORD 'travis_ci_test';" -U
   postgres
@@ -53,6 +52,7 @@ jobs:
   - stage: lint
     install:
     - pip install flake8
+    before_script: skip
     script:
     - flake8 geostore
   - stage: deploy
