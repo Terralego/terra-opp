@@ -4,11 +4,14 @@ language: python
 python:
 - '3.6'
 - '3.7'
+- '3.8'
+
 env:
   matrix:
-  - DJANGO_VERSION=2.2 REST_VERSION=3.8
-  - DJANGO_VERSION=2.2 REST_VERSION=3.9
-  - DJANGO_VERSION=2.2 REST_VERSION=3.10
+  - DJANGO_VERSION=2.2.*
+  - DJANGO_VERSION=3.0.*
+  - DJANGO_VERSION=dev
+
 services:
 - postgresql
 addons:
@@ -17,10 +20,12 @@ addons:
     packages:
     - postgresql-10-postgis-2.4
     - postgresql-10-pgrouting
+
 stages:
 - lint
 - test
 - deploy
+
 install:
 - sudo apt-get -y install libproj-dev binutils gdal-bin
 - pip install -e .[dev]
@@ -42,6 +47,8 @@ script:
 - coverage run ./manage.py test
 - codecov
 jobs:
+  allow_failures:
+    - env: DJANGO_VERSION=dev
   include:
   - stage: lint
     install:

@@ -33,14 +33,13 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     install_requires=[
-        'Django==2.2.5',
+        'Django>=2.2',
         'terra-common>=0.3.1,<0.4',
-        'django-terra-accounts>=0.3.3,<0.4',
+        'django-terra-accounts>=0.3.3',
         "django-terra-utils>=0.3.6",
-        "drf-yasg>=1.9",
-        "packaging",  # wait for drf-yasg fix
         "deepmerge",
         "requests>=2.19",
         "mercantile>=1.0",
