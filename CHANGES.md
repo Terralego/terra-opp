@@ -2,6 +2,10 @@
 CHANGELOG
 =========
 
+0.3.5           (XXXX-XX-XX)
+----------------------------
+
+* Compatibility with python 3.8, django 3.0 and DRF 3.11
 
 
 0.3.5      (2019-11-04)
