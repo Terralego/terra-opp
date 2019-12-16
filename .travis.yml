@@ -54,7 +54,7 @@ jobs:
     - pip install flake8
     before_script: skip
     script:
-    - flake8 geostore
+    - flake8 terra_opp
   - stage: deploy
     install: skip
     before_script: skip
