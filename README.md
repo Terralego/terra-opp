@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/Terralego/terra-opp.svg?branch=master)](https://travis-ci.org/Terralego/terra-opp)
+[![codecov](https://codecov.io/gh/Terralego/terra-opp/branch/master/graph/badge.svg)](https://codecov.io/gh/Terralego/terra-opp)
+[![PyPi version](https://pypip.in/v/terra-opp/badge.png)](https://pypi.org/project/terra-opp/)
 
 Terra Observatoire Photographique des Paysages django application.
 
