@@ -2,10 +2,11 @@
 CHANGELOG
 =========
 
-0.3.5           (XXXX-XX-XX)
+0.3.6           (2019-12-19)
 ----------------------------
 
 * Compatibility with python 3.8, django 3.0 and DRF 3.11
+* Add flake8 for linting
 
 
 0.3.5      (2019-11-04)
