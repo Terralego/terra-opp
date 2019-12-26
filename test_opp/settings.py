@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'versatileimagefield',
     'terra_accounts',
-    'terracommon.datastore',
+    'datastore',
     'geostore',
     'rest_framework',
     'rest_framework_gis',

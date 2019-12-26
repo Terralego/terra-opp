@@ -317,7 +317,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             id=self.viewpoint_with_accepted_picture.point.id
         ).properties['viewpoint_picture'])
 
-    @patch('terracommon.datastore.fields.FileBase64Field.to_internal_value')
+    @patch('datastore.fields.FileBase64Field.to_internal_value')
     def test_viewpoint_create_with_related_docs(self, field):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(['add_viewpoint', 'change_viewpoint'])

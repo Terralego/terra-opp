@@ -8,8 +8,8 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_gis.fields import GeometryField
 from terra_accounts.serializers import UserProfileSerializer
-from terracommon.datastore.models import RelatedDocument
-from terracommon.datastore.serializers import RelatedDocumentSerializer
+from datastore.models import RelatedDocument
+from datastore.serializers import RelatedDocumentSerializer
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Campaign, Picture, Viewpoint
