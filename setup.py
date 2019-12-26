@@ -37,13 +37,13 @@ setup(
     ],
     install_requires=[
         'Django>=2.2,<3.0',  # wait for django-versatileimagefield django 3.0 compatibility
-        'terra-common>=0.3.1,<0.4',
+        'django-geostore>=0.3.15,<0.4',
+        'django-datastore>=0.1.1,<0.2',
         'django-terra-accounts>=0.3.3',
         "django-terra-utils>=0.3.6",
-        "deepmerge",
-        "requests>=2.19",
-        "mercantile>=1.0",
         "psycopg2>=2.7",
+        "django-versatileimagefield",
+        "weasyprint",
     ],
     extras_require={
         'dev': [
