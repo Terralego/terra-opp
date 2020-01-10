@@ -13,7 +13,16 @@ class TerraOppConfig(AppConfig):
                 f"'{self.name}' needs 'versatileimagefield' in INSTALLED_APPS"
             )
 
+        # Set default settings from this app to django.settings if not present
         from . import settings as defaults
         dj_settings = settings._wrapped.__dict__
         for name in dir(defaults):
             dj_settings.setdefault(name, getattr(defaults, name))
+
+        # Update terra appliance settings with searchable properties (for
+        # admin usage)
+        terra_settings = getattr(settings, 'TERRA_APPLIANCE_SETTINGS', {})
+        terra_settings.setdefault(
+            'terraOppSearchableProperties',
+            settings.TROPP_SEARCHABLE_PROPERTIES
+        )

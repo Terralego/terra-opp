@@ -80,7 +80,7 @@ class JsonFilterBackend(filters.BaseFilterBackend):
         for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
             search_key = f'properties__{field["json_key"]}'
             if field['type'] == 'many':
-                search_item = request.GET.getlist(f'{search_key}[]')
+                search_item = request.GET.getlist(f'{search_key}')
             else:
                 search_item = request.GET.get(search_key)
             if search_item:

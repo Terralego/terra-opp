@@ -249,15 +249,15 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         data = self.client.get(list_url, {'properties__voie': 'rue'}).json()
         self.assertEqual(data.get('count'), 1)
         data = self.client.get(
-            list_url, {'properties__themes[]': ['foo']}
+            list_url, {'properties__themes': ['foo']}
         ).json()
         self.assertEqual(data.get('count'), 1)
         data = self.client.get(
-            list_url, {'properties__themes[]': ['bar', 'foo']}
+            list_url, {'properties__themes': ['bar', 'foo']}
         ).json()
         self.assertEqual(data.get('count'), 1)
         data = self.client.get(
-            list_url, {'properties__themes[]': ['bar', 'foobar']}
+            list_url, {'properties__themes': ['bar', 'foobar']}
         ).json()
         self.assertEqual(data.get('count'), 0)
         data = self.client.get(
