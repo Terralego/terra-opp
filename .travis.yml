@@ -1,5 +1,4 @@
 dist: bionic
-sudo: required
 language: python
 python:
 - '3.6'
@@ -60,9 +59,8 @@ jobs:
     before_script: skip
     script: skip
     deploy:
-      stage: deploy
       provider: pypi
-      user: __token__
+      username: __token__
       password:
         secure: D9rzLpB+f+e3JK8VEymn2Kc5Z2387rmRv43S/NrPfkSaTgmY4L2dyCWzXSM8tVJ9iGeI/+Ys+HIU0WH3Q+yNbdF8gHnqY9zYiRwwt5tVCyw2rg4QEMJWRlL01ImOJVXCgkFoF1fpA4NDDFYBTt3Mnf+EjdRqzLJWXZ50CLN4/d24O6u12ARkh+Qr8mdhcDye4mBONRfYAeD/uja9obFnvpJTsKh0bk0Vu+nHeZeiC4f295OdzX9dbck7Y2Hoi6HYIMHixc7+7osAco8zWk+7SaH4/1Jj8uGMFqs1ulviYTnX0Smftwxp8ATqq/Adlq4nZk0MxDs5ZoHnb+xgqaPwuF0UATJNhe2vR/g7LHxicJH5PMM+mUXjSzeUovb7drvsTNCllEGZoKfNMMsAdBzy6U4Sqvkc2Wtw2im/z+916Ysr184+0zzBR8aJKDYqE6NlMP2YNQInnO1ghuXEABmSrZAWNBzzAQPjKpkGaYfe7SyNC//h93sHZDVpV3qYFro92fTPpaxD+VR4XFd6baemgBPx93dxcRdj2fNwtBQHEfJ1IqjYWY2qhAkCMdC7t4n4WKoOLByBlSm1GY9ukFjRnd1pQl6lI9H4ukbhfCqH2YKJdJ4HU5cWVEGOmoLJrKHB8gbtLYCRa295YS6Uus/WMFEdjwMt1FF8W5Z677R0+Tk=
       on:
