@@ -9,8 +9,8 @@ python:
 env:
   matrix:
   - DJANGO_VERSION=2.2.*
-  #- DJANGO_VERSION=3.0.*  wait for django-versatileimagefield django 3.0 support
-  #- DJANGO_VERSION=dev
+  - DJANGO_VERSION=3.0.*
+  - DJANGO_VERSION=dev
 
 services:
 - postgresql
@@ -27,7 +27,7 @@ stages:
 - deploy
 
 install:
-- sudo apt-get -y install libproj-dev binutils gdal-bin
+- sudo apt-get -y install libproj-dev binutils gdal-bin libpango1.0-0 libcairo2
 - pip install -e .[dev]
 - pip install coverage codecov
 - if [[ $DJANGO_VERSION == dev ]]; then pip install -e git+https://github.com/django/django@master#egg=django;
