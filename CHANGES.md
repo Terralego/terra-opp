@@ -5,6 +5,7 @@ CHANGELOG
 0.3.7.dev       (XXXX-XX-XX)
 ----------------------------
 
+* add "as_versatile" filter for template usage
 
 0.3.6           (2019-12-19)
 ----------------------------
