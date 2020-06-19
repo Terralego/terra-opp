@@ -6,6 +6,7 @@ WORKDIR /code
 
 RUN apt-get install -y libpango1.0-0 libcairo2
 
-RUN python3.7 setup.py install
+RUN pip3 install --no-cache-dir pip setuptools wheel -U
+
 # Install dev requirements
-RUN pip3 install -e .[dev] -U
+RUN pip3 install --no-cache-dir -e .[dev] -U

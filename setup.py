@@ -36,7 +36,7 @@ setup(
         'Programming Language :: Python :: 3.8',
     ],
     install_requires=[
-        'Django>=2.2,<3.0',  # wait for django-versatileimagefield django 3.0 compatibility
+        'Django>=2.2',
         'django-geostore>=0.3.15,<0.4',
         'django-datastore>=0.1.1,<0.2',
         'django-terra-accounts>=0.3.3',
