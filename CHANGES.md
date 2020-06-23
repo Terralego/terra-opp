@@ -2,7 +2,7 @@
 CHANGELOG
 =========
 
-0.3.8.dev0      (XXXX-XX-XX)
+0.3.8           (2020-06-23)
 ----------------------------
 
 * Fix default settings
