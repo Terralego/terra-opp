@@ -26,3 +26,4 @@ class TerraOppConfig(AppConfig):
             'terraOppSearchableProperties',
             settings.TROPP_SEARCHABLE_PROPERTIES
         )
+        setattr(settings, 'TERRA_APPLIANCE_SETTINGS', terra_settings)
