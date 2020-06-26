@@ -9,8 +9,6 @@ TROPP_STATES = Choices(
     ('MISSING', 0, 'Missing'),
 )
 
-TROPP_BASE_LAYER_NAME = 'Base opp layer'
-
 TROPP_PICTURES_STATES_WORKFLOW = False
 
 TROPP_VIEWPOINT_PROPERTIES_SET = {
@@ -41,3 +39,6 @@ TROPP_SEARCHABLE_PROPERTIES = {
         'type': 'text',
     },
 }
+
+# Create a geostore layer and provide its Primary Key here
+TROPP_OBSERVATORY_LAYER_PK = None

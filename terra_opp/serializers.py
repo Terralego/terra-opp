@@ -3,7 +3,7 @@ from typing import Optional
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from geostore.models import Feature, Layer
+from geostore.models import Feature
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework_gis.fields import GeometryField
@@ -142,12 +142,9 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     def create(self, validated_data):
         related_docs = validated_data.pop('related', None)
         point_data = validated_data.pop('point', None)
-        layer, created = Layer.objects.get_or_create(
-            name=settings.TROPP_BASE_LAYER_NAME
-        )
         feature = Feature.objects.create(
             geom=point_data.get('geom'),
-            layer=layer,
+            layer_id=settings.TROPP_OBSERVATORY_LAYER_PK,
             properties={},
         )
         validated_data.setdefault('point', feature)

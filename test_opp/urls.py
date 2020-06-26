@@ -16,7 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('geostore.urls',)),
+    path('api/', include('terra_accounts.urls')),
     path('api/', include('terra_opp.urls', namespace='terra_opp')),
 ]
