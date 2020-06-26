@@ -40,7 +40,6 @@ setup(
         'django-geostore>=0.3.15,<0.4',
         'django-datastore>=0.1.1,<0.2',
         'django-terra-accounts>=0.3.11',
-        #"django-terra-accounts@https://github.com/Terralego/django-terra-accounts/archive/fix_settings_overriding.tar.gz",
         "django-terra-utils>=0.3.6",
         "psycopg2>=2.7",
         "django-versatileimagefield",
