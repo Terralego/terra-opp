@@ -44,6 +44,7 @@ after_failure:
 script:
 - coverage run ./manage.py test
 - codecov
+
 jobs:
   allow_failures:
     - env: DJANGO_VERSION=dev
@@ -53,7 +54,7 @@ jobs:
     - pip install flake8
     before_script: skip
     script:
-    - flake8 terra_opp
+    - flake8 terra_opp test_opp
   - stage: deploy
     install: skip
     before_script: skip
