@@ -7,7 +7,8 @@ CHANGELOG
 
 * Warning ! Breaking changes
   * Deprecate defining observatory layer by name.
-  * Now you need to define layer pk instead.
+  * Now you need to define layer pk instead -> TROPP_OBSERVATORY_LAYER_PK.
+  * Existing frontend applications should be fixed by TROPP_OBSERVATORY_LAYER_PK=1
 
 * PK and corresponding endpoints are auto added to /api/settings to send dynamic configuration to frontend
 * Add a command to auto create a geostore point layer
