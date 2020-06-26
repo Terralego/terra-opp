@@ -10,6 +10,12 @@ from geostore.models import Layer
 class Command(BaseCommand):
     help = _('Create a django-geostore point layer to store observatory viewpoints')
 
+    def add_arguments(self, parser):
+        parser.add_argument('-n',
+                            '--name',
+                            action="store",
+                            help="Name for layer to create.")
+
     def get_existing_layer(self):
         existing_observatory = getattr(settings, 'TROPP_OBSERVATORY_LAYER_PK')
         if existing_observatory:
@@ -21,6 +27,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         existing_observatory = self.get_existing_layer()
+        name = options.get('name')
         if existing_observatory:
             self.stdout.write(
                 self.style.WARNING(
@@ -30,7 +37,7 @@ class Command(BaseCommand):
         else:
             layer = Layer.objects.create(
                 geom_type=GeometryTypes.Point,
-                name=f"observatory-{random()}"
+                name=f"{name}"
             )
             self.stdout.write(self.style.SUCCESS(
                 _('Layer has been created. Please set TROPP_OBSERVATORY_LAYER_PK=%s in project settings' % layer.pk)
