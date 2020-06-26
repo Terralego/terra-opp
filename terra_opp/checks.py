@@ -1,4 +1,4 @@
-from django.core.checks import Error, register
+from django.core.checks import Warning, Error, register
 from django.conf import settings
 
 
@@ -9,7 +9,7 @@ def check_dedicated_layer(app_configs, **kwargs):
 
     if not observatory_layer_pk:
         errors.append(
-            Error(
+            Warning(
                 "To correctly use OPP You should create a dedicated layer, set TROPP_OBSERVATORY_LAYER_PK and restart your instance as soon as possible.",
                 hint="""
                     Create a dedicated point layer with ./manage.py create_observatory_layer and set
