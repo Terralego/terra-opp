@@ -29,7 +29,7 @@ class Command(BaseCommand):
         if existing_observatory:
             self.stdout.write(
                 self.style.WARNING(
-                    f"{_('An existing layer already exists for this :')} - TROPP_OBSERVATORY_LAYER_PK : {existing_observatory}"
+                    f"{_('An existing layer already exists for this:')} - TROPP_OBSERVATORY_LAYER_PK: {existing_observatory}"
                 )
             )
         else:
