@@ -79,17 +79,19 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
         ).write_pdf(**kwargs)
 
 
-class ZipRenderer(renderers.BaseRenderer):
+class ZipRenderer(renderers.JSONRenderer):
     media_type = 'application/zip'
     format = 'zip'
 
     def render(self, data, media_type=None, renderer_context=None):
-        with tempfile.SpooledTemporaryFile() as tmp:
-            with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as archive:
-                for file in data:
-                    archive.writestr(
-                        os.path.basename(file.name),
-                        file.open().read(),
-                    )
-            tmp.seek(0)
-            return tmp.read()
+        if renderer_context['request'].method != 'OPTIONS':
+            with tempfile.SpooledTemporaryFile() as tmp:
+                with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as archive:
+                    for file in data:
+                        archive.writestr(
+                            os.path.basename(file.name),
+                            file.open().read(),
+                        )
+                tmp.seek(0)
+                return tmp.read()
+        return super(ZipRenderer, self).render(data, media_type, renderer_context)

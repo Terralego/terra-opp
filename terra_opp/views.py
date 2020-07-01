@@ -15,7 +15,6 @@ from rest_framework.filters import SearchFilter
 from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from terra_accounts.serializers import UserProfileSerializer
-
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
 from .filters import CampaignFilterBackend, JsonFilterBackend
@@ -50,22 +49,6 @@ class ViewpointPdf(RetrieveAPIView):
             'viewpoint': self.get_object(),
             'properties_set': properties_set,
         })
-
-
-class ViewpointZipPictures(RetrieveAPIView):
-    """
-    Return a zip archive of all pictures
-    """
-    queryset = Viewpoint.objects.all()
-    renderer_classes = (ZipRenderer,)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request, *args, **kwargs):
-        qs = self.get_object().pictures.filter(
-            state__gte=settings.TROPP_STATES.ACCEPTED,
-        ).only('file')
-        return Response([p.file for p in qs])
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -154,6 +137,14 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         ).data
 
         return Response(filter_values)
+
+    @method_decorator(cache_page(60 * 5))
+    @action(detail=True, methods=['get', ], renderer_classes=[ZipRenderer], url_path='zip-pictures')
+    def zip_pictures(self, request, *args, **kwargs):
+        qs = self.get_object().pictures.filter(
+            state__gte=settings.TROPP_STATES.ACCEPTED,
+        ).only('file')
+        return Response([p.file for p in qs])
 
 
 class CampaignViewSet(viewsets.ModelViewSet):

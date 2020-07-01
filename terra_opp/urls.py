@@ -19,9 +19,4 @@ urlpatterns += [
         views.ViewpointPdf.as_view(),
         name='viewpoint-pdf',
     ),
-    path(
-        'viewpoints/<int:pk>/zip-pictures',
-        views.ViewpointZipPictures.as_view(),
-        name='viewpoint-zip',
-    ),
 ]
