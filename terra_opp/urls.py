@@ -13,10 +13,3 @@ router.register(r'pictures', views.PictureViewSet, basename='picture')
 
 urlpatterns = router.urls
 
-urlpatterns += [
-    path(
-        'viewpoints/<int:pk>/pdf',
-        views.ViewpointPdf.as_view(),
-        name='viewpoint-pdf',
-    ),
-]

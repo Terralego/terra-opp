@@ -33,24 +33,6 @@ from .serializers import (
 )
 
 
-class ViewpointPdf(RetrieveAPIView):
-    """
-    Return a pdf representation of the given viewpoint by its id.
-    """
-    queryset = Viewpoint.objects.all()
-    template_name = 'terra_opp/viewpoint_pdf.html'
-    renderer_classes = (PdfRenderer,)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-    @method_decorator(cache_page(60 * 5))
-    def get(self, request, *args, **kwargs):
-        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET['pdf']
-        return Response({
-            'viewpoint': self.get_object(),
-            'properties_set': properties_set,
-        })
-
-
 class ViewpointViewSet(viewsets.ModelViewSet):
     serializer_class = ViewpointSerializerWithPicture
     permission_classes = [
@@ -86,6 +68,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     search_fields = ('label', )
     date_search_field = 'pictures__date__date'
     pagination_class = RestPageNumberPagination
+    template_name = 'terra_opp/viewpoint_pdf.html'
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
@@ -145,6 +128,15 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             state__gte=settings.TROPP_STATES.ACCEPTED,
         ).only('file')
         return Response([p.file for p in qs])
+
+    @method_decorator(cache_page(60 * 5))
+    @action(detail=True, methods=['get', ], renderer_classes=[PdfRenderer])
+    def pdf(self, request, *args, **kwargs):
+        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET['pdf']
+        return Response({
+            'viewpoint': self.get_object(),
+            'properties_set': properties_set,
+        })
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
