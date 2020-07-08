@@ -28,7 +28,7 @@ stages:
 install:
 - sudo apt-get -y install libproj-dev binutils gdal-bin libpango1.0-0 libcairo2
 - pip install -e .[dev]
-- pip install coverage codecov
+- pip install codecov
 - if [[ $DJANGO_VERSION == dev ]]; then pip install -e git+https://github.com/django/django@master#egg=django;
   else pip install Django==$DJANGO_VERSION -U; fi
 
