@@ -2,7 +2,7 @@
 CHANGELOG
 =========
 
-0.3.9.dev0      (XXXX-XX-XX)
+0.4.0.dev0      (XXXX-XX-XX)
 ----------------------------
 
 * Warning ! Breaking changes
