@@ -4,6 +4,11 @@
 
 Terralego Backend for OPP module
 
+### Requirements
+
+* To handle pictures in templates, please install weasyprint requirement librairies 
+https://weasyprint.readthedocs.io/en/stable/install.html#linux
+
 ### First, create a data layer for observatory
 
 ```bash
