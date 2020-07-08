@@ -63,7 +63,7 @@ class Viewpoint(BaseLabelModel):
 
     @property
     def picture(self):
-        pics = self.ordered_pics.all()
+        pics = self.ordered_pics
         return pics.first().file if pics else None
 
     class Meta:
