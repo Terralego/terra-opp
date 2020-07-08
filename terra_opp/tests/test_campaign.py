@@ -45,14 +45,14 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         response = self.client.get(list_url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, response.data.get('count'))
-        self.assertEqual(
+        self.assertIn(
             viewpoint.pictures.first().file.url,
             response.data.get('results')[0].get('picture').get('original')
         )
 
         response = self.client.get(campaign_url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(
+        self.assertIn(
             viewpoint.pictures.first().file.url,
             response.data.get('viewpoints')[0].get('picture').get('original')
         )

@@ -16,4 +16,3 @@ class AsVersatileTestCase(TestCase):
         template_to_render = Template("{% load opp_tags %}{{ picture.file|as_versatile:'thumbnail__750x1500' }}")
         rendered_template = template_to_render.render(context)
         self.assertIn("750x1500", rendered_template)
-        self.assertTrue(rendered_template.startswith("http://testserver"))
