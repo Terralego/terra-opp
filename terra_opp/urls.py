@@ -1,4 +1,3 @@
-from django.urls import path
 from rest_framework.routers import SimpleRouter
 
 from . import views
@@ -12,4 +11,3 @@ router.register(r'campaigns', views.CampaignViewSet, basename='campaign')
 router.register(r'pictures', views.PictureViewSet, basename='picture')
 
 urlpatterns = router.urls
-

@@ -12,7 +12,6 @@ from django.views.decorators.cache import cache_page
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.generics import RetrieveAPIView
 from rest_framework.response import Response
 from terra_accounts.serializers import UserProfileSerializer
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
