@@ -64,7 +64,7 @@ class Viewpoint(BaseLabelModel):
     @property
     def picture(self):
         pics = self.ordered_pics
-        return pics.first().file if pics else None
+        return pics[0].file if pics else None
 
     class Meta:
         permissions = (
