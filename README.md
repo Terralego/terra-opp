@@ -4,9 +4,18 @@
 
 Terra Observatoire Photographique des Paysages django application.
 
+### First, create a data layer for observatory
+
+```bash
+./manage.py create_observatory_layer -n observatory
+```
+
+Then get the given primary key, for example 10.
+
 ### Settings needed to be set
 
-```
+```python
+TROPP_OBSERVATORY_LAYER_PK=10  # replace by primary key given by command
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {

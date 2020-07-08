@@ -39,7 +39,7 @@ setup(
         'Django>=2.2',
         'django-geostore>=0.3.15,<0.4',
         'django-datastore>=0.1.1,<0.2',
-        'django-terra-accounts>=0.3.3',
+        'django-terra-accounts>=0.3.11',
         "django-terra-utils>=0.3.6",
         "psycopg2>=2.7",
         "django-versatileimagefield",
