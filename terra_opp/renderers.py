@@ -36,7 +36,6 @@ def django_url_fetcher(url, *args, **kwargs):
             'encoding': encoding,
             'filename': parsed_url.netloc,
         }
-        print(url, parsed_url.netloc)
         # try to find in media storage
         if default_storage.exists(parsed_url.netloc):
             data['file_obj'] = default_storage.open(parsed_url.netloc)
