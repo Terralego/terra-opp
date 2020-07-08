@@ -3,12 +3,9 @@ import os
 import tempfile
 import zipfile
 from io import StringIO
-from os.path import basename
 from urllib.parse import urlparse
 
 import weasyprint
-from django.conf import settings
-from django.contrib.staticfiles.finders import find
 from django.core.files.storage import default_storage
 from rest_framework import renderers
 from terra_utils.helpers import CustomCsvBuilder
@@ -27,37 +24,26 @@ class CSVRenderer(renderers.BaseRenderer):
         return csv_file.read()
 
 
-def django_url_fetcher(url):
-    mime_type, encoding = mimetypes.guess_type(url)
-    url_path = urlparse(url).path
-    data = {
-        'mime_type': mime_type,
-        'encoding': encoding,
-        'filename': basename(url_path),
-    }
+def django_url_fetcher(url, *args, **kwargs):
+    """ Helper from django-weasyprint """
+    # load file:// paths directly from disk
+    if url.startswith('file:'):
+        mime_type, encoding = mimetypes.guess_type(url)
+        parsed_url = urlparse(url)
 
-    minio_scheme = 'https' if settings.AWS_S3_SECURE_URLS else 'http'
-    minio_url_prefix = f"{minio_scheme}://{settings.AWS_S3_CUSTOM_DOMAIN}"
-
-    if url.startswith(minio_url_prefix):  # media file from minio
-        url = url.replace(
-            minio_url_prefix,
-            settings.AWS_S3_ENDPOINT_URL + settings.AWS_STORAGE_BUCKET_NAME
-        )
-
-    elif settings.MEDIA_URL and url_path.startswith(settings.MEDIA_URL):
-        # media file from filesystem
-        path = url_path.replace(settings.MEDIA_URL, settings.MEDIA_ROOT)
-        data['file_obj'] = default_storage.open(path)
-        return data
-
-    elif url_path.startswith(settings.STATIC_URL):
-        path = url_path.replace(settings.STATIC_URL, '')
-        data['file_obj'] = open(find(path), 'rb')
-        return data
+        data = {
+            'mime_type': mime_type,
+            'encoding': encoding,
+            'filename': parsed_url.netloc,
+        }
+        print(url, parsed_url.netloc)
+        # try to find in media storage
+        if default_storage.exists(parsed_url.netloc):
+            data['file_obj'] = default_storage.open(parsed_url.netloc)
+            return data
 
     # fall back to weasyprint default fetcher
-    return weasyprint.default_url_fetcher(url)
+    return weasyprint.default_url_fetcher(url, *args, **kwargs)
 
 
 class PdfRenderer(renderers.TemplateHTMLRenderer):

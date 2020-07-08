@@ -116,7 +116,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             qs = Viewpoint.objects.all().distinct()
         pictures_qs = Picture.objects.order_by('-created_at')
         return qs.select_related('point').prefetch_related(
-            Prefetch('pictures', queryset=pictures_qs, to_attr='ordered_pics')
+            Prefetch('pictures', queryset=pictures_qs, to_attr='_ordered_pics')
         )
 
     def get_serializer_class(self):

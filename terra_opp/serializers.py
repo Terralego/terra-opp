@@ -6,7 +6,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from geostore import GeometryTypes
 from geostore.models import Feature, Layer
 from rest_framework import serializers
-from rest_framework.fields import SerializerMethodField
 from rest_framework_gis.fields import GeometryField
 from terra_accounts.serializers import UserProfileSerializer
 from datastore.models import RelatedDocument
@@ -28,20 +27,12 @@ class PermissiveImageFieldSerializer(VersatileImageFieldSerializer):
 
 
 class SimpleViewpointSerializer(serializers.ModelSerializer):
-    picture = SerializerMethodField()
+    picture = VersatileImageFieldSerializer('terra_opp')
     point = GeometryField(source='point.geom')
 
     class Meta:
         model = Viewpoint
         fields = ('id', 'label', 'picture', 'point')
-
-    def get_picture(self, viewpoint):
-        try:
-            return VersatileImageFieldSerializer('terra_opp').to_native(
-                viewpoint.ordered_pics[0].file
-            )
-        except IndexError:
-            return None
 
 
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
