@@ -549,3 +549,24 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         )
         self.assertEqual(status.HTTP_200_OK, data.status_code)
         self.assertIn('application/pdf', data['Content-Type'])
+
+    def test_options_request_on_zip_pictures_must_return_200(self):
+        data = self.client.options(
+            reverse(
+                'terra_opp:viewpoint-zip-pictures',
+                args=[self.viewpoint_with_accepted_picture.pk, ],
+            )
+        )
+        self.assertEqual(status.HTTP_200_OK, data.status_code)
+        self.assertIn('application/zip', data['Content-Type'])
+
+    def test_get_request_on_zip_pictures_must_return_a_zip_with_accepted_pictures(self):
+        data = self.client.get(
+            reverse(
+                'terra_opp:viewpoint-zip-pictures',
+                args=[self.viewpoint_with_accepted_picture.pk, ],
+            )
+        )
+        self.assertEqual(status.HTTP_200_OK, data.status_code)
+        self.assertIn('application/zip', data['Content-Type'])
+        self.assertEqual(1, len(data.data))
