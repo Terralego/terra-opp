@@ -5,7 +5,7 @@ RUN mkdir -p /code/src
 RUN useradd -ms /bin/bash django
 RUN chown -R django:django /code
 
-RUN apt-get update && apt-get install -y libpango1.0-0 libcairo2
+RUN apt-get update && apt-get install -y libpango1.0-0 libcairo2 libjpeg62 libjpeg62-dev zlib1g-dev libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
 
 USER django
 

@@ -52,6 +52,20 @@ class Viewpoint(BaseLabelModel):
             return STATES.CHOICES_DICT[STATES.MISSING]
         return STATES.CHOICES_DICT[picture.state]
 
+    @property
+    def ordered_pics(self):
+        if hasattr(self, '_ordered_pics'):
+            # if _ordered_pics set by prefetch on qs, get it
+            return self._ordered_pics
+        else:
+            # not prefetch, compute
+            return self.pictures.order_by('-created_at')
+
+    @property
+    def picture(self):
+        pics = self.ordered_pics
+        return pics[0].file if pics else None
+
     class Meta:
         permissions = (
             ('can_download_pdf', 'Is able to download a pdf document'),

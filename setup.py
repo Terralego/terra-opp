@@ -37,6 +37,7 @@ setup(
     ],
     install_requires=[
         'Django>=2.2',
+        'djangorestframework',
         'django-geostore>=0.3.15,<0.4',
         'django-datastore>=0.1.1,<0.2',
         'django-terra-accounts>=0.3.11',
