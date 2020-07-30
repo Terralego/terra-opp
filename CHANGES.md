@@ -1,19 +1,26 @@
 
-CHANGELOG
-=========
+0.4.0 / 2020-07-30
+==================
 
-0.4.0.dev0      (XXXX-XX-XX)
-----------------------------
+  * Warning ! Breaking changes
+    * Due to uniformity of storage usages, you need to use file:// schema in your template to access pictures 
+    * Deprecate defining observatory layer by name.
+    * Now you need to define layer pk instead -> TROPP_OBSERVATORY_LAYER_PK.
+    * Existing frontend applications should be fixed by TROPP_OBSERVATORY_LAYER_PK=1
 
-* Warning ! Breaking changes
-  * Due to uniformity of storage usages, you need to use file:// schema in your template to access pictures 
-  * Deprecate defining observatory layer by name.
-  * Now you need to define layer pk instead -> TROPP_OBSERVATORY_LAYER_PK.
-  * Existing frontend applications should be fixed by TROPP_OBSERVATORY_LAYER_PK=1
-
-* PK and corresponding endpoints are auto added to /api/settings to send dynamic configuration to frontend
-* Add a command to auto create a geostore point layer
-* Storage bucket is not required anymore.
+  * fix picture property
+  * fix prefetched data as list and not queryset
+  * fix restframework not listed in setup requirements
+  * Fix storage usage and make it working with weasyprint with default and custom storages
+  * add correct dependencies to handle JPG
+  * allow argument set layer name at creation
+  * dont block if observatory layer pk not defined, to let ability to create it
+  * block start without defined correct layer settings
+  * add and improve configuration checking
+  * add command to create point layer to used as observatory
+  * set defined observatory layer by pk and provide info to frontend to avoid expecting hardcoded pk=1 layer for tiles
+  * PK and corresponding endpoints are auto added to /api/settings to send dynamic configuration to frontend
+  * Storage bucket is not required anymore.
 
 0.3.8           (2020-06-23)
 ----------------------------
