@@ -6,7 +6,9 @@ from io import StringIO
 from urllib.parse import urlparse
 
 import weasyprint
+from django.conf import settings
 from django.core.files.storage import default_storage
+from django.utils.module_loading import import_string
 from rest_framework import renderers
 from terra_utils.helpers import CustomCsvBuilder
 
@@ -51,8 +53,11 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """Returns the rendered pdf"""
-        html = super().render(data, accepted_media_type=accepted_media_type,
-                              renderer_context=renderer_context)
+        html = super().render(
+            data,
+            accepted_media_type=accepted_media_type,
+            renderer_context=renderer_context,
+        )
         request = renderer_context['request']
         base_url = request.build_absolute_uri("/")
 
@@ -60,7 +65,7 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
         return weasyprint.HTML(
             string=html,
             base_url=base_url,
-            url_fetcher=django_url_fetcher,
+            url_fetcher=import_string(settings.TROPP_URL_FETCHER),
         ).write_pdf(**kwargs)
 
 
