@@ -30,6 +30,7 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
 )
+from .utils import update_point_thumbnail, remove_point_thumbnail
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -188,3 +189,15 @@ class PictureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+        # TODO tests
+        update_point_thumbnail(serializer.instance, self.request)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        # TODO tests
+        update_point_thumbnail(serializer.instance, self.request)
+
+    def perform_destroy(self, instance):
+        remove_point_thumbnail(instance, self.request)
+        # TODO tests
+        instance.delete()

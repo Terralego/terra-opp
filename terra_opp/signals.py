@@ -1,10 +1,8 @@
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from versatileimagefield.serializers import VersatileImageFieldSerializer
 
-from .models import Picture, Viewpoint
+from .models import Viewpoint
 
 
 @receiver(post_save, sender=Viewpoint)
@@ -26,19 +24,3 @@ def update_or_create_viewpoint(instance, **kwargs):
             point.properties[f'viewpoint_{prop}'] = value
 
     point.save()
-
-
-@receiver(post_save, sender=Picture)
-def update_or_create_picture(instance, **kwargs):
-    viewpoint = instance.viewpoint
-    point = viewpoint.point
-    latest_picture = viewpoint.pictures.latest()
-
-    # Add thumbnail representation in the feature's properties
-    # only if this instance is newer than the latest picture
-    if instance.date >= latest_picture.date:
-        last_picture_sizes = VersatileImageFieldSerializer('terra_opp').to_representation(instance.file)
-        point.properties['viewpoint_picture'] = (
-            f"http://{Site.objects.get_current().domain}{last_picture_sizes['thumbnail']}"
-        )
-        point.save()
