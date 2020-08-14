@@ -8,7 +8,6 @@ class TerraOppConfig(AppConfig):
 
     def ready(self):
         from . import checks  # NOQA
-        import terra_opp.signals  # NOQA
 
         # Set default settings from this app to django.settings if not present
         from . import settings as defaults

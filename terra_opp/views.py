@@ -30,7 +30,7 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
 )
-from .utils import update_point_thumbnail, remove_point_thumbnail
+from .utils import update_point_thumbnail, remove_point_thumbnail, update_point_properties
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -69,6 +69,14 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     date_search_field = 'pictures__date__date'
     pagination_class = RestPageNumberPagination
     template_name = 'terra_opp/viewpoint_pdf.html'
+
+    def perform_create(self, serializer):
+        serializer.save()
+        update_point_properties(serializer.instance)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        update_point_properties(serializer.instance)
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in

@@ -1,7 +1,34 @@
+from django.conf import settings
 from django.http import HttpRequest
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
-from terra_opp.models import Picture
+from terra_opp.models import Picture, Viewpoint
+
+
+def update_point_properties(instance: Viewpoint):
+    """
+    Update the point properties of the given Viewpoint instance.
+    The properties are the viewpoint's id and label, and all those defined in the
+    TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT setting.
+
+    :param Viewpoint instance: Viewpoint instance used to update its point properties
+    """
+    # TODO tests
+    point = instance.point
+    properties = {
+        'viewpoint_id': instance.id,
+        'viewpoint_label': instance.label,
+    }
+    # Merging the properties bellow in the ones already present in the point
+    point.properties = {**point.properties, **properties}
+
+    # Add any specified viewpoint property in the feature's properties
+    for prop in settings.TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT:
+        value = instance.properties.get(prop)
+        if value is not None:
+            point.properties[f'viewpoint_{prop}'] = value
+
+    point.save()
 
 
 def change_point_thumbnail(picture: Picture, context):
