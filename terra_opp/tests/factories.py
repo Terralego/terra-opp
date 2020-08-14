@@ -5,7 +5,7 @@ from factory.django import FileField
 from terra_opp.models import Campaign, Picture, Viewpoint
 
 
-class CampaignFactory(factory.DjangoModelFactory):
+class CampaignFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(
         'terra_accounts.tests.factories.TerraUserFactory'
     )
@@ -17,7 +17,7 @@ class CampaignFactory(factory.DjangoModelFactory):
         model = Campaign
 
 
-class ViewpointFactory(factory.DjangoModelFactory):
+class ViewpointFactory(factory.django.DjangoModelFactory):
     point = factory.SubFactory(
         'geostore.tests.factories.FeatureFactory'
     )
@@ -29,7 +29,7 @@ class ViewpointFactory(factory.DjangoModelFactory):
         model = Viewpoint
 
 
-class PictureFactory(factory.DjangoModelFactory):
+class PictureFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory(
         'terra_accounts.tests.factories.TerraUserFactory'
     )
