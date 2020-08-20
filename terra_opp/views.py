@@ -30,7 +30,7 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
 )
-from .utils import update_point_thumbnail, remove_point_thumbnail, update_point_properties
+from .utils import remove_point_thumbnail, update_point_properties
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -72,11 +72,11 @@ class ViewpointViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save()
-        update_point_properties(serializer.instance)
+        update_point_properties(serializer.instance, self.request)
 
     def perform_update(self, serializer):
         serializer.save()
-        update_point_properties(serializer.instance)
+        update_point_properties(serializer.instance, self.request)
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
@@ -197,15 +197,12 @@ class PictureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
-        # TODO tests
-        update_point_thumbnail(serializer.instance, self.request)
+        update_point_properties(serializer.instance.viewpoint, self.request)
 
     def perform_update(self, serializer):
         serializer.save()
-        # TODO tests
-        update_point_thumbnail(serializer.instance, self.request)
+        update_point_properties(serializer.instance.viewpoint, self.request)
 
     def perform_destroy(self, instance):
         remove_point_thumbnail(instance, self.request)
-        # TODO tests
         instance.delete()
