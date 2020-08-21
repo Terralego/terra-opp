@@ -6,6 +6,7 @@ import coreschema
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
+from django.core.cache import cache
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -77,6 +78,11 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save()
         update_point_properties(serializer.instance, self.request)
+
+    def perform_destroy(self, instance):
+        instance.point.delete()
+        instance.delete()
+        cache.clear()
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
