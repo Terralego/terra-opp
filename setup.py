@@ -48,7 +48,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'factory-boy',
+            'factory-boy<3.0.0',  # TODO remove fixed version when all related packages include the fix
             'flake8',
             'coverage',
         ]
