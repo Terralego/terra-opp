@@ -1,5 +1,7 @@
 from terra_utils.helpers import Choices
 
+TROPP_URL_FETCHER = 'terra_opp.renderers.django_url_fetcher'
+
 TROPP_STATES = Choices(
     ('DRAFT', 100, 'Draft'),
     ('SUBMITTED', 200, 'Submitted'),

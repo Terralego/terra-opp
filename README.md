@@ -33,3 +33,32 @@ VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
 
 AUTH_USER_MODEL = 'terra_accounts.TerraUser'
 ```
+
+### Media files
+
+If your project is not using the default django storage, then you must define and set a url fetcher in order to tell weasyprint where to find your media files.
+
+An example of url fetcher using media files from S3 storage :
+ 
+ ```python
+from django.conf import settings
+from terra_opp.renderers import django_url_fetcher
+
+
+def custom_url_fetcher(url, *args, **kwargs):
+    scheme = 'https' if settings.AWS_S3_SECURE_URLS else 'http'
+    url_prefix = f"{scheme}://{settings.AWS_S3_CUSTOM_DOMAIN}"
+
+    if url.startswith(url_prefix):
+        url = url.replace(
+            url_prefix,
+            settings.AWS_S3_ENDPOINT_URL + settings.AWS_STORAGE_BUCKET_NAME
+        )
+
+    return django_url_fetcher(url, *args, **kwargs)
+```
+
+And then you must refer to this custom url fetcher in your settings. Example if your fetcher is define in `custom/fetcher.py`:
+```python
+TROPP_URL_FETCHER = 'custom.fetcher.custom_url_fetcher'
+```
