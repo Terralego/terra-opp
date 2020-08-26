@@ -16,7 +16,7 @@ from terra_accounts.tests.factories import TerraUserFactory
 from geostore.models import Feature
 from geostore.tests.factories import FeatureFactory
 from terra_opp.models import Picture, Viewpoint
-from terra_opp.tests.factories import ViewpointFactory
+from terra_opp.tests.factories import ViewpointFactory, PictureFactory
 from terra_opp.tests.mixins import TestPermissionsMixin
 
 
@@ -46,7 +46,6 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             os.path.join(os.path.dirname(__file__), 'placeholder.jpg'),
             'rb',
         )
-        date = timezone.datetime(2018, 1, 1, tzinfo=timezone.utc)
         self.data_create = {
             "label": "Basic viewpoint created",
             "point": self.feature.geom.json,
@@ -54,9 +53,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
-            # Cannot have nested json when working on files
-            "picture.date": date,
-            "picture.file": self.fp,
+            "picture_ids": [picture.pk for picture in self.viewpoint_with_accepted_picture.pictures.all()],
         }
         self._clean_permissions()  # Don't forget that !
 
@@ -313,9 +310,10 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         response = self._viewpoint_create_with_picture()
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertIn('placeholder', Feature.objects.get(
-            id=self.viewpoint_with_accepted_picture.point.id
-        ).properties['viewpoint_picture'])
+        self.assertIn(
+            'placeholder',
+            Viewpoint.objects.get(label='Viewpoint created with picture').point.properties['viewpoint_picture'],
+        )
 
     @patch('datastore.fields.FileBase64Field.to_internal_value')
     def test_viewpoint_create_with_related_docs(self, field):
@@ -432,7 +430,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             viewpoint.properties['test_update']
         )
 
-        # Check if the viewpoint's feature is correctly updated by the signal
+        # Check if the viewpoint's feature is correctly updated
         feature = Feature.objects.get(
             pk=self.viewpoint_with_accepted_picture.point.pk
         )
@@ -492,8 +490,57 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         feature = Feature.objects.get(
             pk=self.viewpoint_with_accepted_picture.point.pk
         )
-        # Check if the signal has been sent after patching
+        # Check if the feature has been updated after patching
         self.assertIn(
+            file.name.split('.')[0],
+            feature.properties['viewpoint_picture']
+        )
+
+    def test_add_older_picture_on_viewpoint_with_auth_and_perms(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['change_viewpoint', ])
+
+        # We create an older picture
+        date = timezone.datetime(1950, 1, 1, tzinfo=timezone.utc)
+        file = SimpleUploadedFile(
+            name='test_older.jpg',
+            content=open(
+                'terra_opp/tests/placeholder.jpg',
+                'rb',
+            ).read(),
+            content_type='image/jpeg',
+        )
+        picture = Picture.objects.create(
+            viewpoint=self.viewpoint_with_accepted_picture,
+            owner=self.user,
+            date=date,
+            file=file,
+            state=settings.TROPP_STATES.ACCEPTED,
+        )
+        response = self.client.patch(
+            reverse('terra_opp:viewpoint-detail', args=[
+                self.viewpoint_with_accepted_picture.pk,
+            ]),
+            {
+                'picture_ids': [pic.id for pic in self.viewpoint_with_accepted_picture.pictures.all()] + [picture.id]
+            },
+        )
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        viewpoint = Viewpoint.objects.get(
+            pk=self.viewpoint_with_accepted_picture.pk
+        )
+        self.assertEqual(2, viewpoint.pictures.count())
+        self.assertNotIn(
+            file.name.split('.')[0],
+            viewpoint.pictures.latest().file.name
+        )
+
+        feature = Feature.objects.get(
+            pk=self.viewpoint_with_accepted_picture.point.pk
+        )
+        # Check that the feature has not been updated after patching
+        self.assertNotIn(
             file.name.split('.')[0],
             feature.properties['viewpoint_picture']
         )
@@ -570,3 +617,142 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertEqual(status.HTTP_200_OK, data.status_code)
         self.assertIn('application/zip', data['Content-Type'])
         self.assertEqual(1, len(data.data))
+
+    def test_add_picture_on_viewpoint_must_update_feature_properties(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['add_picture', ])
+
+        # should be equal to 1
+        picture_count = self.viewpoint_with_accepted_picture.pictures.count()
+
+        file = SimpleUploadedFile(
+            name='add_picture_test.jpg',
+            content=open(
+                'terra_opp/tests/placeholder.jpg',
+                'rb',
+            ).read(),
+            content_type='image/jpeg',
+        )
+        data = {
+            'viewpoint': self.viewpoint_with_accepted_picture.pk,
+            'date': timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
+            'file': file,
+            'state': settings.TROPP_STATES.ACCEPTED,
+        }
+        # this request must create a new picture on the viewpoint and update it's feature properties
+        response = self.client.post(
+            reverse('terra_opp:picture-list'),
+            data,
+            format="multipart",
+        )
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(self.viewpoint_with_accepted_picture.pictures.count(), picture_count + 1)
+        # Check if the feature has been updated after patching, so update the object from the DB before
+        self.viewpoint_with_accepted_picture.refresh_from_db()
+        self.assertIn(
+            file.name.split('.')[0],
+            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+        )
+
+    def test_add_picture_on_viewpoint_with_no_picture_must_update_feature_properties(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['add_picture', ])
+
+        # should be equal to 0
+        picture_count = self.viewpoint_without_picture.pictures.count()
+
+        file = SimpleUploadedFile(
+            name='add_picture_test.jpg',
+            content=open(
+                'terra_opp/tests/placeholder.jpg',
+                'rb',
+            ).read(),
+            content_type='image/jpeg',
+        )
+        data = {
+            'viewpoint': self.viewpoint_without_picture.pk,
+            'date': timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
+            'file': file,
+            'state': settings.TROPP_STATES.ACCEPTED,
+        }
+        # this request must create a new picture on the viewpoint and update it's feature properties
+        response = self.client.post(
+            reverse('terra_opp:picture-list'),
+            data,
+            format="multipart",
+        )
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(self.viewpoint_without_picture.pictures.count(), picture_count + 1)
+        # Check if the feature has been updated after patching, so update the object from the DB before
+        self.viewpoint_without_picture.refresh_from_db()
+        self.assertIn(
+            file.name.split('.')[0],
+            self.viewpoint_without_picture.point.properties['viewpoint_picture'],
+        )
+
+    def test_update_picture_on_viewpoint_must_update_feature_properties(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['change_picture', ])
+
+        file = SimpleUploadedFile(
+            name='another_placeholder.jpg',
+            content=open(
+                'terra_opp/tests/another_placeholder.jpg',
+                'rb',
+            ).read(),
+            content_type='image/jpeg',
+        )
+        data = {
+            'file': file,
+        }
+        # this request must create a new picture on the viewpoint and update it's feature properties
+        response = self.client.patch(
+            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+            data,
+            format='multipart',
+        )
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        # Check if the feature has been updated after patching, so update the object from the DB before
+        self.viewpoint_with_accepted_picture.refresh_from_db()
+        self.assertIn(
+            file.name.split('.')[0],
+            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+        )
+
+    def test_delete_picture_on_viewpoint_must_update_feature_properties(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['delete_picture', ])
+
+        PictureFactory(viewpoint=self.viewpoint_with_accepted_picture, date=timezone.datetime(2020, 8, 20, tzinfo=timezone.utc))
+        picture_count = self.viewpoint_with_accepted_picture.pictures.count()
+        before_last_picture = self.viewpoint_with_accepted_picture.pictures.all()[1]
+
+        # this request must delete the picture on the viewpoint and update it's feature properties
+        response = self.client.delete(
+            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+        )
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(self.viewpoint_with_accepted_picture.pictures.count(), picture_count - 1)
+        # Check if the feature has been updated after patching, so update the object from the DB before
+        self.viewpoint_with_accepted_picture.refresh_from_db()
+        self.assertIn(
+            before_last_picture.file.name.split('.')[0],
+            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+        )
+
+    def test_delete_the_only_available_picture_on_viewpoint_must_update_feature_properties(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['delete_picture', ])
+
+        # The viewpoint must only have a single available picture for this test
+        self.assertEqual(1, self.viewpoint_with_accepted_picture.pictures.count())
+
+        # This request must delete the only available picture on the viewpoint.
+        response = self.client.delete(
+            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+        )
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(0, self.viewpoint_with_accepted_picture.pictures.count())
+        # Check if the feature has been updated after patching, so update the object from the DB before
+        self.viewpoint_with_accepted_picture.refresh_from_db()
+        self.assertFalse('viewpoint_picture' in self.viewpoint_with_accepted_picture.point.properties)

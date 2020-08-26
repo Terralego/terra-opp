@@ -6,6 +6,7 @@ import coreschema
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
+from django.core.cache import cache
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
@@ -30,6 +31,7 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
 )
+from .point_utilities import remove_point_thumbnail, update_point_properties
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -68,6 +70,21 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     date_search_field = 'pictures__date__date'
     pagination_class = RestPageNumberPagination
     template_name = 'terra_opp/viewpoint_pdf.html'
+
+    def perform_create(self, serializer):
+        serializer.save()
+        update_point_properties(serializer.instance, self.request)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        update_point_properties(serializer.instance, self.request)
+
+    def perform_destroy(self, instance):
+        instance.point.delete()
+        instance.delete()
+        # FIXME This may be better if done directly in geostore
+        # FIXME Try to be more precise and delete only the related feature's tile in cache
+        cache.delete('tile_cache_*')  # delete all the cached tiles
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
@@ -188,3 +205,12 @@ class PictureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+        update_point_properties(serializer.instance.viewpoint, self.request)
+
+    def perform_update(self, serializer):
+        serializer.save()
+        update_point_properties(serializer.instance.viewpoint, self.request)
+
+    def perform_destroy(self, instance):
+        remove_point_thumbnail(instance, self.request)
+        instance.delete()
