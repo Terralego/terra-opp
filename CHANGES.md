@@ -1,4 +1,13 @@
 
+0.4.1 / 2020-08-26
+==================
+
+  * Removing signals and doing all the logic in the related viewsets
+  * Add possibility to make your own url fetcher :
+    * Add TROPP_URL_FETCHER settings and instructions
+  * Fix factory boy version
+  * using django.db.models.JSONField instead of django.contrib.postgres.fields
+
 0.4.0 / 2020-07-30
 ==================
 
