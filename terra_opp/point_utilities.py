@@ -36,27 +36,20 @@ def update_point_properties(viewpoint: Viewpoint, request: HttpRequest):
 
 
 def change_point_thumbnail(picture: Picture, context):
+    """
+    Change the point thumbnail of the given Picture instance. The context is mandatory as it will be used to determine
+    the picture location.
+
+    :param Picture picture: Picture instance used to update its related point thumbnail property.
+    :param context: The context containing the original request instance.
+    :return:
+    """
     """ Change the picture's point thumbnail """
     terra_opp_versatile_serializer = VersatileImageFieldSerializer('terra_opp')
     terra_opp_versatile_serializer._context = context
     last_picture_sizes = terra_opp_versatile_serializer.to_representation(picture.file)
     picture.viewpoint.point.properties['viewpoint_picture'] = last_picture_sizes['thumbnail']
     picture.viewpoint.point.save()
-
-
-def update_point_thumbnail(picture: Picture, request: HttpRequest):
-    """
-    Update the point thumbnail of the given Picture instance only if the given picture is newer than the lastest
-    picture on its related viewpoint. The request is mandatory as it will be used to determine the picture location.
-
-    :param Picture picture: Picture instance used to update its related point thumbnail property.
-    :param HttpRequest request: The original request instance.
-    """
-    latest_picture = picture.viewpoint.pictures.latest()
-
-    if picture.date >= latest_picture.date:
-        # The current picture is more recent than the latest one, so we need to update it
-        change_point_thumbnail(picture, context={'request': request})
 
 
 def remove_point_thumbnail(picture: Picture, request: HttpRequest):

@@ -31,7 +31,7 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
 )
-from .utils import remove_point_thumbnail, update_point_properties
+from .point_utilities import remove_point_thumbnail, update_point_properties
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -82,7 +82,9 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.point.delete()
         instance.delete()
-        cache.clear()
+        # FIXME This may be better if done directly in geostore
+        # FIXME Try to be more precise and delete only the related feature's tile in cache
+        cache.delete('tile_cache_*')  # delete all the cached tiles
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
