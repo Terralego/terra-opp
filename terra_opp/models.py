@@ -31,7 +31,8 @@ class ViewpointsManager(models.Manager):
 
 
 class City(BaseLabelModel):
-    pass
+    class Meta:
+        verbose_name_plural = _("Cities")
 
 
 class Theme(BaseLabelModel):

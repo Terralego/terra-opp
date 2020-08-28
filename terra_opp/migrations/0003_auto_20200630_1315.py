@@ -9,10 +9,10 @@ def set_city_and_themes_from_properties(app, schema_editor):
     City = app.get_model('terra_opp', 'City')
     Theme = app.get_model('terra_opp', 'Theme')
     for viewpoint in Viewpoint.objects.all():
-        city = City.objects.create(label=viewpoint.properties['commune'])
+        city, created = City.objects.get_or_create(label=viewpoint.properties['commune'])
         viewpoint.city = city
         for theme in viewpoint.properties['themes']:
-            theme = Theme.objects.create(label=theme)
+            theme, created = Theme.objects.get_or_create(label=theme)
             viewpoint.themes.add(theme)
         viewpoint.save()
 
@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'abstract': False,
+                'verbose_name_plural': 'Cities',
             },
         ),
         migrations.CreateModel(
