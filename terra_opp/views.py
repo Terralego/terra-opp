@@ -18,7 +18,7 @@ from terra_accounts.serializers import UserProfileSerializer
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
 from .filters import CampaignFilterBackend, JsonFilterBackend
-from .models import Campaign, Picture, Viewpoint
+from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .renderers import PdfRenderer, ZipRenderer
 from .serializers import (
@@ -134,6 +134,9 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             get_user_model().objects.filter(pictures__isnull=False).distinct(),
             many=True,
         ).data
+
+        filter_values['cities'] = [city.label for city in City.objects.all()]
+        filter_values['themes'] = [theme.label for theme in Theme.objects.all()]
 
         return Response(filter_values)
 
