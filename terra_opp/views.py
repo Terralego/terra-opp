@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from terra_accounts.serializers import UserProfileSerializer
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
-from .filters import CampaignFilterBackend, JsonFilterBackend
+from .filters import CampaignFilterBackend, CityFilterBackend, JsonFilterBackend, ThemesFilterBackend
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .renderers import PdfRenderer, ZipRenderer
@@ -44,6 +44,8 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         SchemaAwareDjangoFilterBackend,
         DateFilterBackend,
         JsonFilterBackend,
+        CityFilterBackend,
+        ThemesFilterBackend,
     )
     filter_fields_schema = [
         coreapi.Field(

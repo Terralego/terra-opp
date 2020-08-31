@@ -37,10 +37,12 @@ class SimpleViewpointSerializer(serializers.ModelSerializer):
 
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
     status = serializers.SerializerMethodField()
+    city = serializers.StringRelatedField()
+    themes = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'picture', 'point', 'status', 'properties')
+        fields = ('id', 'label', 'picture', 'point', 'status', 'properties', 'city', 'themes')
 
     def get_status(self, obj):
         """
@@ -125,11 +127,13 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     pictures = SimplePictureSerializer(many=True, read_only=True)
     related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
+    city = serializers.StringRelatedField()
+    themes = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Viewpoint
         fields = ('id', 'label', 'properties', 'point', 'picture_ids',
-                  'pictures', 'related')
+                  'pictures', 'related', 'city', 'themes')
 
     def create(self, validated_data):
         related_docs = validated_data.pop('related', None)
