@@ -138,8 +138,9 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             many=True,
         ).data
 
-        filter_values['cities'] = [city.label for city in City.objects.all()]
-        filter_values['themes'] = [theme.label for theme in Theme.objects.all()]
+        # FIXME We may want to set all cities and themes as uniques directly in the model?
+        filter_values['cities'] = [city.label for city in City.objects.all() if city.label not in [None, '']]
+        filter_values['themes'] = [theme.label for theme in Theme.objects.all() if theme.label not in [None, '']]
 
         return Response(filter_values)
 
