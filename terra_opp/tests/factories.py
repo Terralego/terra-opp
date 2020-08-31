@@ -2,7 +2,7 @@ import factory
 from django.utils import timezone
 from factory.django import FileField
 
-from terra_opp.models import Campaign, Picture, Viewpoint
+from terra_opp.models import Campaign, City, Picture, Theme, Viewpoint
 
 
 class CampaignFactory(factory.django.DjangoModelFactory):
@@ -24,6 +24,12 @@ class ViewpointFactory(factory.django.DjangoModelFactory):
     pictures = factory.RelatedFactory(
         'terra_opp.tests.factories.PictureFactory', 'viewpoint'
     )
+    city = factory.SubFactory(
+        'terra_opp.tests.factories.CityFactory'
+    )
+    themes = factory.RelatedFactory(
+        'terra_opp.tests.factories.ThemeFactory'
+    )
 
     class Meta:
         model = Viewpoint
@@ -38,3 +44,15 @@ class PictureFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Picture
+
+
+class CityFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = City
+
+
+class ThemeFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = Theme
