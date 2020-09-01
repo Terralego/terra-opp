@@ -12,7 +12,7 @@ from datastore.models import RelatedDocument
 from datastore.serializers import RelatedDocumentUrlSerializer
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
-from .models import Campaign, Picture, Viewpoint
+from .models import Campaign, City, Picture, Theme, Viewpoint
 
 UserModel = get_user_model()
 
@@ -127,13 +127,15 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     pictures = SimplePictureSerializer(many=True, read_only=True)
     related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
-    city = serializers.StringRelatedField()
-    themes = serializers.StringRelatedField(many=True)
+    city = serializers.StringRelatedField(read_only=True)
+    city_label = serializers.CharField(required=False, allow_null=False)
+    themes = serializers.StringRelatedField(read_only=True, many=True)
+    themes_labels = serializers.ListField(required=False)
 
     class Meta:
         model = Viewpoint
         fields = ('id', 'label', 'properties', 'point', 'picture_ids',
-                  'pictures', 'related', 'city', 'themes')
+                  'pictures', 'related', 'city', 'city_label', 'themes', 'themes_labels')
 
     def create(self, validated_data):
         related_docs = validated_data.pop('related', None)
@@ -151,6 +153,28 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             properties={},
         )
         validated_data.setdefault('point', feature)
+
+        city_label = validated_data.pop('city_label', None)
+        city, created = City.objects.get_or_create(
+            label=city_label,
+            defaults={
+                'label': city_label,
+            }
+        )
+        validated_data.setdefault('city', city)
+
+        themes_labels = validated_data.pop('themes_labels', None)
+        if themes_labels:
+            theme_list = []
+            for theme_label in themes_labels:
+                theme, created = Theme.objects.get_or_create(
+                    label=theme_label,
+                    defaults={
+                        'label': theme_label,
+                    }
+                )
+                theme_list.append(theme)
+            validated_data.setdefault('themes', theme_list)
 
         instance = super().create(validated_data)
         self.handle_related_documents(instance, related_docs)
