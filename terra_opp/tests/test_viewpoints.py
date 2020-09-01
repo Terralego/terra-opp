@@ -49,11 +49,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.data_create = {
             "label": "Basic viewpoint created",
             "point": self.feature.geom.json,
+            "city_label": "Nantes",
         }
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
             "picture_ids": [picture.pk for picture in self.viewpoint_with_accepted_picture.pictures.all()],
+            "city_label": "Nantes",
+        }
+        self.data_create_with_themes = {
+            "label": "Viewpoint created with themes",
+            "point": self.feature.geom.json,
+            "city_label": "Nantes",
+            "themes_labels": ["foo", "bar"],
         }
         self._clean_permissions()  # Don't forget that !
 
@@ -343,6 +351,20 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             Viewpoint.objects.get(label='Viewpoint created with picture').point.properties['viewpoint_picture'],
         )
 
+    def test_viewpoint_create_with_themes_with_auth_and_perms(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['add_viewpoint', ])
+        response = self.client.post(
+            reverse('terra_opp:viewpoint-list'),
+            self.data_create_with_themes,
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertListEqual(
+            list(Viewpoint.objects.get(label='Viewpoint created with themes').themes.all().values_list('label', flat=True)),
+            ["foo", "bar"],
+        )
+
     @patch('datastore.fields.FileBase64Field.to_internal_value')
     def test_viewpoint_create_with_related_docs(self, field):
         self.client.force_authenticate(user=self.user)
@@ -362,7 +384,8 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                 "related": [{
                     "key": "croquis",
                     "document": document,
-                }]
+                }],
+                "city_label": 'Nantes',
             },
             format="json",
         )
