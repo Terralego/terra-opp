@@ -11,9 +11,11 @@ def set_city_and_themes_from_properties(app, schema_editor):
     for viewpoint in Viewpoint.objects.all():
         city, created = City.objects.get_or_create(label=viewpoint.properties['commune'])
         viewpoint.city = city
+        del viewpoint.properties['commune']
         for theme in viewpoint.properties['themes']:
             theme, created = Theme.objects.get_or_create(label=theme)
             viewpoint.themes.add(theme)
+        del viewpoint.properties['themes']
         viewpoint.save()
 
 
