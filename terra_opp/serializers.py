@@ -9,7 +9,7 @@ from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 from terra_accounts.serializers import UserProfileSerializer
 from datastore.models import RelatedDocument
-from datastore.serializers import RelatedDocumentSerializer
+from datastore.serializers import RelatedDocumentUrlSerializer
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Campaign, Picture, Viewpoint
@@ -123,7 +123,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         many=True,
     )
     pictures = SimplePictureSerializer(many=True, read_only=True)
-    related = RelatedDocumentSerializer(many=True, required=False)
+    related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
 
     class Meta:
