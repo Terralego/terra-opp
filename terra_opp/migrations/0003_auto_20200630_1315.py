@@ -2,6 +2,8 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
+from django.test import RequestFactory
+from terra_opp.point_utilities import update_point_properties
 
 
 def set_city_and_themes_from_properties(app, schema_editor):
@@ -17,6 +19,7 @@ def set_city_and_themes_from_properties(app, schema_editor):
             viewpoint.themes.add(theme)
         del viewpoint.properties['themes']
         viewpoint.save()
+        update_point_properties(viewpoint, RequestFactory().get('/'))
 
 
 class Migration(migrations.Migration):
