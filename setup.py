@@ -45,6 +45,7 @@ setup(
         "psycopg2>=2.7",
         "django-versatileimagefield",
         "weasyprint",
+        "django-filter",
     ],
     extras_require={
         'dev': [

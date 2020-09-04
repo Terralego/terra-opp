@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -17,7 +18,7 @@ from rest_framework.response import Response
 from terra_accounts.serializers import UserProfileSerializer
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
-from .filters import CampaignFilterBackend, CityFilterBackend, JsonFilterBackend, ThemesFilterBackend
+from .filters import CampaignFilterBackend, JsonFilterBackend, ViewpointFilterSet
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .renderers import PdfRenderer, ZipRenderer
@@ -44,9 +45,9 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         SchemaAwareDjangoFilterBackend,
         DateFilterBackend,
         JsonFilterBackend,
-        CityFilterBackend,
-        ThemesFilterBackend,
+        DjangoFilterBackend,
     )
+    filterset_class = ViewpointFilterSet
     filter_fields_schema = [
         coreapi.Field(
             name='pictures__id',

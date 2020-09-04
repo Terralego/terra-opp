@@ -5,8 +5,11 @@ import coreschema
 from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models import Q
+from django_filters.rest_framework import CharFilter, FilterSet
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
+
+from .models import Viewpoint
 
 
 class CampaignFilterBackend(filters.BaseFilterBackend):
@@ -118,46 +121,10 @@ class JsonFilterBackend(filters.BaseFilterBackend):
         return super().get_schema_fields(view)
 
 
-class CityFilterBackend(filters.BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        city = request.GET.get('city', None)
-        if city:
-            queryset = queryset.filter(city__label=city)
+class ViewpointFilterSet(FilterSet):
+    city = CharFilter(field_name='city__label', lookup_expr='exact')
+    themes = CharFilter(field_name='themes__label', lookup_expr='exact')
 
-        return queryset
-
-    def get_schema_fields(self, view):
-        super().get_schema_fields(view)
-        return coreapi.Field(
-            name='city',
-            required=False,
-            location='query',
-            schema=coreschema.String(
-                title="City",
-                description="Exact name of the city to filter viewpoints with"
-            ),
-        )
-
-
-class ThemesFilterBackend(filters.BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        themes = request.GET.getlist('themes', None)
-        if themes:
-            for theme in themes:
-                # As we work on a m2m, we must chain filters
-                # see https://docs.djangoproject.com/en/2.2/topics/db/queries/#spanning-multi-valued-relationships
-                queryset = queryset.filter(themes__label=theme)
-
-        return queryset
-
-    def get_schema_fields(self, view):
-        super().get_schema_fields(view)
-        return coreapi.Field(
-            name='themes',
-            required=False,
-            location='query',
-            schema=coreschema.Array(
-                title="Themes",
-                description="Array of themes labels to filter viewpoints with"
-            ),
-        )
+    class Meta:
+        model = Viewpoint
+        fields = ['city', 'themes']
