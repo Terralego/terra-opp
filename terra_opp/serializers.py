@@ -35,10 +35,26 @@ class SimpleViewpointSerializer(serializers.ModelSerializer):
         fields = ('id', 'label', 'picture', 'point')
 
 
+class LabelSlugRelatedField(serializers.SlugRelatedField):
+    _model = None
+
+    def to_internal_value(self, data):
+        self._model.objects.get_or_create(label=data, defaults={'label': data})
+        return super().to_internal_value(data)
+
+
+class CityLabelSlugRelatedField(LabelSlugRelatedField):
+    _model = City
+
+
+class ThemeLabelSlugRelatedField(LabelSlugRelatedField):
+    _model = Theme
+
+
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
     status = serializers.SerializerMethodField()
-    city = serializers.StringRelatedField()
-    themes = serializers.StringRelatedField(many=True)
+    city = CityLabelSlugRelatedField(slug_field='label', queryset=City.objects.all(), required=False, allow_null=False)
+    themes = ThemeLabelSlugRelatedField(slug_field='label', many=True, queryset=Theme.objects.all(), required=False)
 
     class Meta:
         model = Viewpoint
@@ -127,15 +143,12 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     pictures = SimplePictureSerializer(many=True, read_only=True)
     related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
-    city = serializers.StringRelatedField(read_only=True)
-    city_label = serializers.CharField(required=False, allow_null=False)
-    themes = serializers.StringRelatedField(read_only=True, many=True)
-    themes_labels = serializers.ListField(required=False)
+    city = CityLabelSlugRelatedField(slug_field='label', queryset=City.objects.all(), required=False, allow_null=False)
+    themes = ThemeLabelSlugRelatedField(slug_field='label', many=True, queryset=Theme.objects.all(), required=False)
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'properties', 'point', 'picture_ids',
-                  'pictures', 'related', 'city', 'city_label', 'themes', 'themes_labels')
+        fields = ('id', 'label', 'properties', 'point', 'picture_ids', 'pictures', 'related', 'city', 'themes', )
 
     def create(self, validated_data):
         related_docs = validated_data.pop('related', None)
@@ -154,7 +167,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         )
         validated_data.setdefault('point', feature)
 
-        city_label = validated_data.pop('city_label', None)
+        city_label = validated_data.pop('city', None)
         city, created = City.objects.get_or_create(
             label=city_label,
             defaults={
@@ -163,7 +176,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         )
         validated_data.setdefault('city', city)
 
-        themes_labels = validated_data.pop('themes_labels', None)
+        themes_labels = validated_data.pop('themes', None)
         if themes_labels:
             theme_list = []
             for theme_label in themes_labels:

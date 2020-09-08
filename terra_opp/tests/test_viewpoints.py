@@ -49,19 +49,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.data_create = {
             "label": "Basic viewpoint created",
             "point": self.feature.geom.json,
-            "city_label": "Nantes",
+            "city": "Nantes",
         }
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
             "picture_ids": [picture.pk for picture in self.viewpoint_with_accepted_picture.pictures.all()],
-            "city_label": "Nantes",
+            "city": "Nantes",
         }
         self.data_create_with_themes = {
             "label": "Viewpoint created with themes",
             "point": self.feature.geom.json,
-            "city_label": "Nantes",
-            "themes_labels": ["foo", "bar"],
+            "city": "Nantes",
+            "themes": ["foo", "bar"],
         }
         self._clean_permissions()  # Don't forget that !
 
@@ -69,7 +69,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.fp.close()
 
     def test_viewpoint_get_list_anonymous(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(6):
             data = self.client.get(
                 reverse('terra_opp:viewpoint-list')
             ).json()
@@ -385,7 +385,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                     "key": "croquis",
                     "document": document,
                 }],
-                "city_label": 'Nantes',
+                "city": 'Nantes',
             },
             format="json",
         )
