@@ -101,6 +101,8 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             qs = Viewpoint.objects.all().distinct()
         pictures_qs = Picture.objects.order_by('-created_at')
         return qs.select_related('point', 'city').prefetch_related(
+            'pictures',
+            'related',
             Prefetch('pictures', queryset=pictures_qs, to_attr='_ordered_pics'),
             'themes',
         )
