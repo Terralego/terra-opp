@@ -1,5 +1,5 @@
 
-0.4.2.dev0 / 2020-09-09
+0.4.2 / 2020-09-09
 ==================
 
   * Taking out city and themes from JSON properties, making it related objects on each viewpoint instance
