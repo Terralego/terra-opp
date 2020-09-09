@@ -1,4 +1,10 @@
 
+0.4.2.dev0 / 2020-09-09
+==================
+
+  * Taking out city and themes from JSON properties, making it related objects on each viewpoint instance
+  * Improving related document serializer, it does not return the file as base64 anymore but only the access url
+
 0.4.1 / 2020-08-26
 ==================
 

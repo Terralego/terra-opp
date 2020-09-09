@@ -5,8 +5,11 @@ import coreschema
 from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models import Q
+from django_filters.rest_framework import CharFilter, FilterSet
 from rest_framework import filters
 from rest_framework.exceptions import ValidationError
+
+from .models import Viewpoint
 
 
 class CampaignFilterBackend(filters.BaseFilterBackend):
@@ -116,3 +119,12 @@ class JsonFilterBackend(filters.BaseFilterBackend):
                 )
             )
         return super().get_schema_fields(view)
+
+
+class ViewpointFilterSet(FilterSet):
+    city = CharFilter(field_name='city__label', lookup_expr='exact')
+    themes = CharFilter(field_name='themes__label', lookup_expr='exact')
+
+    class Meta:
+        model = Viewpoint
+        fields = ['city', 'themes']

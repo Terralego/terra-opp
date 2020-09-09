@@ -16,7 +16,7 @@ from terra_accounts.tests.factories import TerraUserFactory
 from geostore.models import Feature
 from geostore.tests.factories import FeatureFactory
 from terra_opp.models import Picture, Viewpoint
-from terra_opp.tests.factories import ViewpointFactory, PictureFactory
+from terra_opp.tests.factories import CityFactory, PictureFactory, ThemeFactory, ViewpointFactory
 from terra_opp.tests.mixins import TestPermissionsMixin
 
 
@@ -49,11 +49,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.data_create = {
             "label": "Basic viewpoint created",
             "point": self.feature.geom.json,
+            "city": "Nantes",
         }
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
             "picture_ids": [picture.pk for picture in self.viewpoint_with_accepted_picture.pictures.all()],
+            "city": "Nantes",
+        }
+        self.data_create_with_themes = {
+            "label": "Viewpoint created with themes",
+            "point": self.feature.geom.json,
+            "city": "Nantes",
+            "themes": ["foo", "bar"],
         }
         self._clean_permissions()  # Don't forget that !
 
@@ -61,7 +69,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.fp.close()
 
     def test_viewpoint_get_list_anonymous(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(6):
             data = self.client.get(
                 reverse('terra_opp:viewpoint-list')
             ).json()
@@ -102,14 +110,18 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_anonymous_options_request_returns_correct_search_filters(self):
-        ViewpointFactory(properties={
-            'commune': 'Rouperou-le-coquet',
-            'themes': ['foo', 'Bar']
-        })
-        ViewpointFactory(properties={
-            'commune': 'Montcuq',
-            'themes': ['Bar']
-        })
+        city1 = CityFactory(label='Montcuq')
+        city2 = CityFactory(label='Rouperou-le-coquet')
+        theme1 = ThemeFactory(label="Bar")
+        theme2 = ThemeFactory(label="foo")
+        ViewpointFactory(
+            city=city1,
+            themes=[theme1, theme2],
+        )
+        ViewpointFactory(
+            city=city2,
+            themes=[theme1],
+        )
         data = self.client.get(
             reverse('terra_opp:viewpoint-filters')
         ).json()
@@ -232,35 +244,59 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             label="Viewpoint for search",
             pictures__state=settings.TROPP_STATES.ACCEPTED,
             properties={
-                "commune": "Rouperou-le-coquet",
-                "themes": ['foo', 'bar', 'baz'],
                 "voie": "coin d'en bas de la rue du bout",
                 "site": "Carrière des petits violoncelles",
             },
         )
         self.assertEqual(self.client.get(list_url).json()['count'], 2)
-        data = self.client.get(
-            list_url, {'properties__commune': 'Rouperou-le-coquet'}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
         data = self.client.get(list_url, {'properties__voie': 'rue'}).json()
         self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'properties__themes': ['foo']}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'properties__themes': ['bar', 'foo']}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'properties__themes': ['bar', 'foobar']}
-        ).json()
-        self.assertEqual(data.get('count'), 0)
         data = self.client.get(
             list_url, {'properties__site': 'carrière'}
         ).json()
         self.assertEqual(data.get('count'), 1)
+
+    def test_viewpoint_search_city(self):
+        list_url = reverse('terra_opp:viewpoint-list')
+        city = CityFactory(label='Rouperou-le-coquet')
+        ViewpointFactory(
+            label="Viewpoint for search",
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            city=city,
+        )
+        self.assertEqual(self.client.get(list_url).json()['count'], 2)
+        data = self.client.get(
+            list_url, {'city': 'Rouperou-le-coquet'}
+        ).json()
+        self.assertEqual(data.get('count'), 1)
+
+    def test_viewpoint_search_themes(self):
+        list_url = reverse('terra_opp:viewpoint-list')
+        theme_foo = ThemeFactory(label="foo")
+        theme_bar = ThemeFactory(label="bar")
+        theme_baz = ThemeFactory(label="baz")
+        vp = ViewpointFactory(
+            label="Viewpoint for search",
+            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            properties={
+                "voie": "coin d'en bas de la rue du bout",
+                "site": "Carrière des petits violoncelles",
+            },
+        )
+        vp.themes.add(theme_foo, theme_bar, theme_baz)
+        self.assertEqual(self.client.get(list_url).json()['count'], 2)
+        data = self.client.get(
+            list_url, {'themes': ['foo']}
+        ).json()
+        self.assertEqual(data.get('count'), 1)
+        data = self.client.get(
+            list_url, {'themes': ['bar', 'foo']}
+        ).json()
+        self.assertEqual(data.get('count'), 1)
+        data = self.client.get(
+            list_url, {'themes': ['bar', 'foobar']}
+        ).json()
+        self.assertEqual(data.get('count'), 0)
 
     def _viewpoint_create(self):
         return self.client.post(
@@ -315,6 +351,20 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             Viewpoint.objects.get(label='Viewpoint created with picture').point.properties['viewpoint_picture'],
         )
 
+    def test_viewpoint_create_with_themes_with_auth_and_perms(self):
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(['add_viewpoint', ])
+        response = self.client.post(
+            reverse('terra_opp:viewpoint-list'),
+            self.data_create_with_themes,
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertListEqual(
+            list(Viewpoint.objects.get(label='Viewpoint created with themes').themes.all().values_list('label', flat=True)),
+            ["foo", "bar"],
+        )
+
     @patch('datastore.fields.FileBase64Field.to_internal_value')
     def test_viewpoint_create_with_related_docs(self, field):
         self.client.force_authenticate(user=self.user)
@@ -334,7 +384,8 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                 "related": [{
                     "key": "croquis",
                     "document": document,
-                }]
+                }],
+                "city": 'Nantes',
             },
             format="json",
         )

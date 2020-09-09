@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
@@ -17,8 +18,8 @@ from rest_framework.response import Response
 from terra_accounts.serializers import UserProfileSerializer
 from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
-from .filters import CampaignFilterBackend, JsonFilterBackend
-from .models import Campaign, Picture, Viewpoint
+from .filters import CampaignFilterBackend, JsonFilterBackend, ViewpointFilterSet
+from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .renderers import PdfRenderer, ZipRenderer
 from .serializers import (
@@ -44,7 +45,9 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         SchemaAwareDjangoFilterBackend,
         DateFilterBackend,
         JsonFilterBackend,
+        DjangoFilterBackend,
     )
+    filterset_class = ViewpointFilterSet
     filter_fields_schema = [
         coreapi.Field(
             name='pictures__id',
@@ -97,8 +100,11 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         if self.request.user.is_authenticated:
             qs = Viewpoint.objects.all().distinct()
         pictures_qs = Picture.objects.order_by('-created_at')
-        return qs.select_related('point').prefetch_related(
-            Prefetch('pictures', queryset=pictures_qs, to_attr='_ordered_pics')
+        return qs.select_related('point', 'city').prefetch_related(
+            'pictures',
+            'related',
+            Prefetch('pictures', queryset=pictures_qs, to_attr='_ordered_pics'),
+            'themes',
         )
 
     def get_serializer_class(self):
@@ -134,6 +140,22 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             get_user_model().objects.filter(pictures__isnull=False).distinct(),
             many=True,
         ).data
+
+        # FIXME We may want to set all cities and themes as uniques directly in the model?
+        filter_values['cities'] = City.objects.exclude(label__isnull=True).exclude(label__exact='').distinct().order_by(
+            'label',
+        ).values_list(
+            'label',
+            flat=True,
+        )
+        filter_values['themes'] = Theme.objects.exclude(label__isnull=True).exclude(
+            label__exact='',
+        ).distinct().order_by(
+            'label',
+        ).values_list(
+            'label',
+            flat=True,
+        )
 
         return Response(filter_values)
 

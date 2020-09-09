@@ -30,11 +30,30 @@ class ViewpointsManager(models.Manager):
         ).distinct()
 
 
+class City(BaseLabelModel):
+    class Meta:
+        verbose_name_plural = _("Cities")
+
+
+class Theme(BaseLabelModel):
+    pass
+
+
 class Viewpoint(BaseLabelModel):
     point = models.ForeignKey(
         Feature,
         on_delete=models.CASCADE,
         related_name='points',
+    )
+    city = models.ForeignKey(
+        City,
+        on_delete=models.CASCADE,
+        related_name='viewpoints',
+        null=True,
+    )
+    themes = models.ManyToManyField(
+        Theme,
+        related_name='viewpoints',
     )
     properties = JSONField(_('Properties'), default=dict, blank=True)
     related = GenericRelation('datastore.RelatedDocument')

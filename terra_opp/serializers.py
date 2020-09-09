@@ -12,7 +12,7 @@ from datastore.models import RelatedDocument
 from datastore.serializers import RelatedDocumentUrlSerializer
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
-from .models import Campaign, Picture, Viewpoint
+from .models import Campaign, City, Picture, Theme, Viewpoint
 
 UserModel = get_user_model()
 
@@ -35,12 +35,30 @@ class SimpleViewpointSerializer(serializers.ModelSerializer):
         fields = ('id', 'label', 'picture', 'point')
 
 
+class LabelSlugRelatedField(serializers.SlugRelatedField):
+    _model = None
+
+    def to_internal_value(self, data):
+        self._model.objects.get_or_create(label=data, defaults={'label': data})
+        return super().to_internal_value(data)
+
+
+class CityLabelSlugRelatedField(LabelSlugRelatedField):
+    _model = City
+
+
+class ThemeLabelSlugRelatedField(LabelSlugRelatedField):
+    _model = Theme
+
+
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
     status = serializers.SerializerMethodField()
+    city = CityLabelSlugRelatedField(slug_field='label', queryset=City.objects.all(), required=False, allow_null=False)
+    themes = ThemeLabelSlugRelatedField(slug_field='label', many=True, queryset=Theme.objects.all(), required=False)
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'picture', 'point', 'status', 'properties')
+        fields = ('id', 'label', 'picture', 'point', 'status', 'properties', 'city', 'themes')
 
     def get_status(self, obj):
         """
@@ -125,11 +143,12 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     pictures = SimplePictureSerializer(many=True, read_only=True)
     related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source='point.geom')
+    city = CityLabelSlugRelatedField(slug_field='label', queryset=City.objects.all(), required=False, allow_null=False)
+    themes = ThemeLabelSlugRelatedField(slug_field='label', many=True, queryset=Theme.objects.all(), required=False)
 
     class Meta:
         model = Viewpoint
-        fields = ('id', 'label', 'properties', 'point', 'picture_ids',
-                  'pictures', 'related')
+        fields = ('id', 'label', 'properties', 'point', 'picture_ids', 'pictures', 'related', 'city', 'themes', )
 
     def create(self, validated_data):
         related_docs = validated_data.pop('related', None)
@@ -147,6 +166,28 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             properties={},
         )
         validated_data.setdefault('point', feature)
+
+        city_label = validated_data.pop('city', None)
+        city, created = City.objects.get_or_create(
+            label=city_label,
+            defaults={
+                'label': city_label,
+            }
+        )
+        validated_data.setdefault('city', city)
+
+        themes_labels = validated_data.pop('themes', None)
+        if themes_labels:
+            theme_list = []
+            for theme_label in themes_labels:
+                theme, created = Theme.objects.get_or_create(
+                    label=theme_label,
+                    defaults={
+                        'label': theme_label,
+                    }
+                )
+                theme_list.append(theme)
+            validated_data.setdefault('themes', theme_list)
 
         instance = super().create(validated_data)
         self.handle_related_documents(instance, related_docs)
