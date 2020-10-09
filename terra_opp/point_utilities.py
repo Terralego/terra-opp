@@ -1,7 +1,7 @@
+from PIL import Image
 from django.conf import settings
 from django.http import HttpRequest
 from versatileimagefield.serializers import VersatileImageFieldSerializer
-
 from terra_opp.models import Picture, Viewpoint
 
 
@@ -54,9 +54,19 @@ def change_point_thumbnail(picture: Picture, context):
     terra_opp_versatile_serializer = VersatileImageFieldSerializer("terra_opp")
     terra_opp_versatile_serializer._context = context
     last_picture_sizes = terra_opp_versatile_serializer.to_representation(picture.file)
-    picture.viewpoint.point.properties["viewpoint_picture"] = last_picture_sizes[
-        "thumbnail"
-    ]
+
+    # Use best image thumbnail
+    with Image.open(picture.file) as pic:
+        width, height = pic.size
+        if width < height:
+            picture.viewpoint.point.properties[
+                "viewpoint_picture"
+            ] = last_picture_sizes["thumbnail_vertical"]
+        else:
+            picture.viewpoint.point.properties[
+                "viewpoint_picture"
+            ] = last_picture_sizes["thumbnail"]
+
     picture.viewpoint.point.save()
 
 
