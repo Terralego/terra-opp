@@ -38,10 +38,14 @@ setup(
     install_requires=[
         'Django>=2.2',
         'djangorestframework',
-        'django-geostore>=0.3.15,<0.4',
+        'coreapi',
+        'coreschema',
+        'djangorestframework-gis',
+        'django-url-filter',
+        'django-geostore>=0.3.15',
         'django-datastore>=0.1.1,<0.2',
         'django-terra-accounts>=0.3.11',
-        "django-terra-utils>=0.3.6",
+        "django-terra-settings",
         "psycopg2>=2.7",
         "django-versatileimagefield",
         "weasyprint",
@@ -49,7 +53,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'factory-boy<3.0.0',  # TODO remove fixed version when all related packages include the fix
+            'factory-boy',
             'flake8',
             'coverage',
         ]

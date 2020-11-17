@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'geostore',
     'rest_framework',
     'rest_framework_gis',
-    'terra_utils',
+    'terra_settings',
     'terra_opp',
 ]
 
@@ -147,25 +147,8 @@ SWAGGER_ENABLED = False
 # set required DRF settings
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_PAGINATION_CLASS': 'terra_utils.pagination.PagePagination',
+    'DEFAULT_PAGINATION_CLASS': 'terra_settings.pagination.PagePagination',
     'PAGE_SIZE': 100,
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.JSONParser',
-        'rest_framework.parsers.FormParser',
-        'rest_framework.parsers.MultiPartParser'
-    ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer'
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication'
-    )
 }
 
 AWS_DEFAULT_ACL = None

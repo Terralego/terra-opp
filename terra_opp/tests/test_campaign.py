@@ -33,12 +33,12 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
                                          pk=campaign_other.pk)
 
         # First we try as anonymous
-        self.assertEqual(status.HTTP_401_UNAUTHORIZED,
-                         self.client.get(list_url).status_code)
-        self.assertEqual(status.HTTP_401_UNAUTHORIZED,
-                         self.client.get(campaign_url).status_code)
-        self.assertEqual(status.HTTP_401_UNAUTHORIZED,
-                         self.client.get(campaign_other_url).status_code)
+        self.assertIn(self.client.get(list_url).status_code,
+                      [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(self.client.get(campaign_url).status_code,
+                      [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(self.client.get(campaign_other_url).status_code,
+                      [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
 
         # Then with no rights
         self.client.force_authenticate(user=self.photograph)

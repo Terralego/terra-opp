@@ -5,14 +5,16 @@ import coreschema
 from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django.db.models import Q
-from django_filters.rest_framework import CharFilter, FilterSet
-from rest_framework import filters
+from django_filters import FilterSet
+from django_filters.rest_framework import filters
 from rest_framework.exceptions import ValidationError
+from rest_framework.filters import BaseFilterBackend
+from url_filter.integrations.drf import DjangoFilterBackend
 
 from .models import Viewpoint
 
 
-class CampaignFilterBackend(filters.BaseFilterBackend):
+class CampaignFilterBackend(BaseFilterBackend):
     """
     Filters for campaigns
     """
@@ -78,7 +80,7 @@ class CampaignFilterBackend(filters.BaseFilterBackend):
         return queryset
 
 
-class JsonFilterBackend(filters.BaseFilterBackend):
+class JsonFilterBackend(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
             search_key = f'properties__{field["json_key"]}'
@@ -122,9 +124,22 @@ class JsonFilterBackend(filters.BaseFilterBackend):
 
 
 class ViewpointFilterSet(FilterSet):
-    city = CharFilter(field_name='city__label', lookup_expr='exact')
-    themes = CharFilter(field_name='themes__label', lookup_expr='exact')
+    city = filters.CharFilter(field_name='city__label', lookup_expr='exact')
+    themes = filters.CharFilter(field_name='themes__label', lookup_expr='exact')
+    date_from = filters.DateFilter(field_name='pictures__date', lookup_expr='gte')
+    date_to = filters.DateFilter(field_name='pictures__date', lookup_expr='lte')
 
     class Meta:
         model = Viewpoint
-        fields = ['city', 'themes']
+        fields = ['city', 'themes', 'date_from', 'date_to']
+
+
+class SchemaAwareDjangoFilterBackend(DjangoFilterBackend):
+    def get_schema_fields(self, view):
+        """
+        Get coreapi filter definitions
+
+        Returns all schemas defined in filter_fields_schema attribute.
+        """
+        super().get_schema_fields(view)
+        return getattr(view, 'filter_fields_schema', [])

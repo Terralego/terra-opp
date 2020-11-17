@@ -10,7 +10,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.utils.module_loading import import_string
 from rest_framework import renderers
-from terra_utils.helpers import CustomCsvBuilder
+from terra_opp.helpers import CustomCsvBuilder
 
 
 class CSVRenderer(renderers.BaseRenderer):

@@ -7,7 +7,6 @@ from geostore import GeometryTypes
 from geostore.models import Feature, Layer
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
-from terra_accounts.serializers import UserProfileSerializer
 from datastore.models import RelatedDocument
 from datastore.serializers import RelatedDocumentUrlSerializer
 from versatileimagefield.serializers import VersatileImageFieldSerializer
@@ -118,8 +117,15 @@ class ListCampaignNestedSerializer(CampaignSerializer):
         fields = ('label', 'assignee', 'picture', 'statistics', 'status')
 
 
+class PhotographSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = ('uuid', 'email', 'properties')
+        read_only_fields = ('uuid', UserModel.USERNAME_FIELD, )
+
+
 class PictureSerializer(serializers.ModelSerializer):
-    owner = UserProfileSerializer(read_only=True)
+    owner = PhotographSerializer(read_only=True)
     file = VersatileImageFieldSerializer('terra_opp')
 
     class Meta:
