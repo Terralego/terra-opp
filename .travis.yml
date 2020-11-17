@@ -1,14 +1,15 @@
 dist: bionic
+
 language: python
+
 python:
 - '3.6'
-- '3.7'
 - '3.8'
+- '3.9'
 
 env:
   matrix:
   - DJANGO_VERSION=2.2.*
-  - DJANGO_VERSION=3.0.*
   - DJANGO_VERSION=3.1.*
   - DJANGO_VERSION=dev
 
@@ -19,7 +20,6 @@ addons:
   apt:
     packages:
     - postgresql-10-postgis-2.4
-    - postgresql-10-pgrouting
 
 stages:
 - lint
@@ -39,9 +39,10 @@ before_script:
 - psql -c "ALTER USER travis_ci_test WITH SUPERUSER;" -U postgres
 - psql -c 'CREATE DATABASE travis_ci_test WITH OWNER travis_ci_test;' -U postgres
 - psql -d travis_ci_test -c 'CREATE EXTENSION postgis;'
-- psql -d travis_ci_test -c 'CREATE EXTENSION pgrouting;'
+
 after_failure:
 - pip freeze
+
 script:
 - coverage run ./manage.py test
 - codecov
