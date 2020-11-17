@@ -4,7 +4,6 @@ CHANGELOG
 0.5.0.dev0      (XXXX-XX-XX)
 ----------------------------
 
-* !! Warning : Breaking Changes !!
   * Use new django-terra-settings instead of terra-utils
   * Some terra-utils functions are directly integrated
 
