@@ -1,12 +1,24 @@
+CHANGELOG
+=========
 
-0.4.2 / 2020-09-09
-==================
+0.5.0.dev0      (XXXX-XX-XX)
+----------------------------
+
+!! WARNING : BREAKING CHANGES !!
+  * You need to adapt your project settings and requirements
+  * Use new django-terra-settings instead of django-terra-utils
+  * Some terra-utils functions are directly integrated
+
+
+0.4.2           (2020-09-09)
+----------------------------
 
   * Taking out city and themes from JSON properties, making it related objects on each viewpoint instance
   * Improving related document serializer, it does not return the file as base64 anymore but only the access url
 
-0.4.1 / 2020-08-26
-==================
+
+0.4.1           (2020-08-26)
+----------------------------
 
   * Removing signals and doing all the logic in the related viewsets
   * Add possibility to make your own url fetcher :
@@ -14,8 +26,9 @@
   * Fix factory boy version
   * using django.db.models.JSONField instead of django.contrib.postgres.fields
 
-0.4.0 / 2020-07-30
-==================
+
+0.4.0           (2020-07-30)
+----------------------------
 
   * Warning ! Breaking changes
     * Due to uniformity of storage usages, you need to use file:// schema in your template to access pictures 

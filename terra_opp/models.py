@@ -8,7 +8,7 @@ except ImportError:  # TODO Remove when dropping Django releases < 3.1
 from django.utils.translation import ugettext_lazy as _
 from versatileimagefield.fields import VersatileImageField
 
-from terra_utils.mixins import BaseUpdatableModel
+from terra_settings.mixins import BaseUpdatableModel
 from geostore.models import Feature
 from .settings import TROPP_STATES as DEFAULT_TROPP_STATES
 

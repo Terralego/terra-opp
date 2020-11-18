@@ -1,4 +1,4 @@
-from terra_utils.helpers import Choices
+from terra_opp.helpers import Choices
 
 TROPP_URL_FETCHER = 'terra_opp.renderers.django_url_fetcher'
 

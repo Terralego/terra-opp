@@ -15,12 +15,11 @@ from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
-from terra_accounts.serializers import UserProfileSerializer
-from terra_utils.filters import DateFilterBackend, SchemaAwareDjangoFilterBackend
 
-from .filters import CampaignFilterBackend, JsonFilterBackend, ViewpointFilterSet
+from .filters import CampaignFilterBackend, JsonFilterBackend, ViewpointFilterSet, SchemaAwareDjangoFilterBackend
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
+from .point_utilities import remove_point_thumbnail, update_point_properties
 from .renderers import PdfRenderer, ZipRenderer
 from .serializers import (
     CampaignSerializer,
@@ -31,8 +30,8 @@ from .serializers import (
     SimpleAuthenticatedViewpointSerializer,
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
+    PhotographSerializer,
 )
-from .point_utilities import remove_point_thumbnail, update_point_properties
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -43,7 +42,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     filter_backends = (
         SearchFilter,
         SchemaAwareDjangoFilterBackend,
-        DateFilterBackend,
         JsonFilterBackend,
         DjangoFilterBackend,
     )
@@ -70,7 +68,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     ]
     filter_fields = ['pictures']
     search_fields = ('label', )
-    date_search_field = 'pictures__date__date'
     pagination_class = RestPageNumberPagination
     template_name = 'terra_opp/viewpoint_pdf.html'
 
@@ -136,7 +133,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             if data is not None:
                 filter_values[key] = data
 
-        filter_values['photographers'] = UserProfileSerializer(
+        filter_values['photographers'] = PhotographSerializer(
             get_user_model().objects.filter(pictures__isnull=False).distinct(),
             many=True,
         ).data
@@ -181,8 +178,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all()
     permission_classes = [permissions.DjangoModelPermissions]
     http_method_names = ['get', 'post', 'put', 'delete', 'options']
-    filter_backends = (CampaignFilterBackend, DateFilterBackend, SearchFilter)
-    date_search_field = 'created_at'
+    filter_backends = (CampaignFilterBackend, SearchFilter)
     search_fields = ('label', )
     pagination_class = RestPageNumberPagination
 
