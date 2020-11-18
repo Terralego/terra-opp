@@ -4,7 +4,9 @@ CHANGELOG
 0.5.0.dev0      (XXXX-XX-XX)
 ----------------------------
 
-  * Use new django-terra-settings instead of terra-utils
+!! WARNING : BREAKING CHANGES !!
+  * You need to adapt your project settings and requirements
+  * Use new django-terra-settings instead of django-terra-utils
   * Some terra-utils functions are directly integrated
 
 
