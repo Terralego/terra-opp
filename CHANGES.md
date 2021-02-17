@@ -1,4 +1,9 @@
 
+0.5.1 / 2021-02-17
+==================
+
+  * Add permissions generation on migrate
+
 0.5.0 / 2021-02-17
 ==================
   * Add translations
