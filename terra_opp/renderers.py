@@ -14,8 +14,8 @@ from terra_opp.helpers import CustomCsvBuilder
 
 
 class CSVRenderer(renderers.BaseRenderer):
-    media_type = 'text/csv'
-    format = 'csv'
+    media_type = "text/csv"
+    format = "csv"
 
     def render(self, data, media_type=None, renderer_context=None):
         csvbuilder = CustomCsvBuilder(data)
@@ -29,18 +29,18 @@ class CSVRenderer(renderers.BaseRenderer):
 def django_url_fetcher(url, *args, **kwargs):
     """ Helper from django-weasyprint """
     # load file:// paths directly from disk
-    if url.startswith('file:'):
+    if url.startswith("file:"):
         mime_type, encoding = mimetypes.guess_type(url)
         parsed_url = urlparse(url)
 
         data = {
-            'mime_type': mime_type,
-            'encoding': encoding,
-            'filename': parsed_url.netloc,
+            "mime_type": mime_type,
+            "encoding": encoding,
+            "filename": parsed_url.netloc,
         }
         # try to find in media storage
         if default_storage.exists(parsed_url.netloc):
-            data['file_obj'] = default_storage.open(parsed_url.netloc)
+            data["file_obj"] = default_storage.open(parsed_url.netloc)
             return data
 
     # fall back to weasyprint default fetcher
@@ -48,8 +48,8 @@ def django_url_fetcher(url, *args, **kwargs):
 
 
 class PdfRenderer(renderers.TemplateHTMLRenderer):
-    media_type = 'application/pdf'
-    format = 'pdf'
+    media_type = "application/pdf"
+    format = "pdf"
 
     def render(self, data, accepted_media_type=None, renderer_context=None):
         """Returns the rendered pdf"""
@@ -58,7 +58,7 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
             accepted_media_type=accepted_media_type,
             renderer_context=renderer_context,
         )
-        request = renderer_context['request']
+        request = renderer_context["request"]
         base_url = request.build_absolute_uri("/")
 
         kwargs = {}
@@ -70,13 +70,13 @@ class PdfRenderer(renderers.TemplateHTMLRenderer):
 
 
 class ZipRenderer(renderers.JSONRenderer):
-    media_type = 'application/zip'
-    format = 'zip'
+    media_type = "application/zip"
+    format = "zip"
 
     def render(self, data, media_type=None, renderer_context=None):
-        if renderer_context['request'].method != 'OPTIONS':
+        if renderer_context["request"].method != "OPTIONS":
             with tempfile.SpooledTemporaryFile() as tmp:
-                with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as archive:
+                with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as archive:
                     for file in data:
                         archive.writestr(
                             os.path.basename(file.name),

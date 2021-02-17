@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.core.management import BaseCommand, CommandError
-from django.utils.translation import gettext_lazy as _
+from django.core.management import BaseCommand
 from geostore import GeometryTypes
 from geostore.models import Layer
 
@@ -56,10 +55,10 @@ class Command(BaseCommand):
 
             try:
                 # whether a layer with this name already exists
-                l = Layer.objects.get(name=name)
+                layer = Layer.objects.get(name=name)
                 self.stdout.write(
                     self.style.WARNING(
-                        f"A layer with pk {l} already exists for this name: {name} - Can't create new one."
+                        f"A layer with pk {layer} already exists for this name: {name} - Can't create new one."
                     )
                 )
                 return

@@ -1,36 +1,36 @@
 from terra_opp.helpers import Choices
 
-TROPP_URL_FETCHER = 'terra_opp.renderers.django_url_fetcher'
+TROPP_URL_FETCHER = "terra_opp.renderers.django_url_fetcher"
 
 TROPP_STATES = Choices(
-    ('DRAFT', 100, 'Draft'),
-    ('SUBMITTED', 200, 'Submitted'),
-    ('ACCEPTED', 300, 'Accepted'),
-    ('REFUSED', -1, 'Refused'),
-    ('CANCELLED', -100, 'Cancelled'),
-    ('MISSING', 0, 'Missing'),
+    ("DRAFT", 100, "Draft"),
+    ("SUBMITTED", 200, "Submitted"),
+    ("ACCEPTED", 300, "Accepted"),
+    ("REFUSED", -1, "Refused"),
+    ("CANCELLED", -100, "Cancelled"),
+    ("MISSING", 0, "Missing"),
 )
 
 TROPP_PICTURES_STATES_WORKFLOW = False
 
 TROPP_VIEWPOINT_PROPERTIES_SET = {
-    'pdf': {
-        ('camera', 'Appareil photo'),
+    "pdf": {
+        ("camera", "Appareil photo"),
     },
-    'form': {},
-    'filter': {},
+    "form": {},
+    "filter": {},
 }
 
 TROPP_FEATURES_PROPERTIES_FROM_VIEWPOINT = ()
 
 TROPP_SEARCHABLE_PROPERTIES = {
-    'road': {
-        'json_key': 'voie',
-        'type': 'text',
+    "road": {
+        "json_key": "voie",
+        "type": "text",
     },
-    'site': {
-        'json_key': 'site',
-        'type': 'text',
+    "site": {
+        "json_key": "site",
+        "type": "text",
     },
 }
 

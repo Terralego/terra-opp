@@ -7,62 +7,89 @@ from terra_opp.point_utilities import update_point_properties
 
 
 def set_city_and_themes_from_properties(app, schema_editor):
-    Viewpoint = app.get_model('terra_opp', 'Viewpoint')
-    City = app.get_model('terra_opp', 'City')
-    Theme = app.get_model('terra_opp', 'Theme')
+    Viewpoint = app.get_model("terra_opp", "Viewpoint")
+    City = app.get_model("terra_opp", "City")
+    Theme = app.get_model("terra_opp", "Theme")
     for viewpoint in Viewpoint.objects.all():
-        city, created = City.objects.get_or_create(label=viewpoint.properties['commune'])
+        city, created = City.objects.get_or_create(
+            label=viewpoint.properties["commune"]
+        )
         viewpoint.city = city
-        del viewpoint.properties['commune']
-        for theme in viewpoint.properties['themes']:
+        del viewpoint.properties["commune"]
+        for theme in viewpoint.properties["themes"]:
             theme, created = Theme.objects.get_or_create(label=theme)
             viewpoint.themes.add(theme)
-        del viewpoint.properties['themes']
+        del viewpoint.properties["themes"]
         viewpoint.save()
-        update_point_properties(viewpoint, RequestFactory().get('/'))
+        update_point_properties(viewpoint, RequestFactory().get("/"))
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('terra_opp', '0002_remove_picture_remarks'),
+        ("terra_opp", "0002_remove_picture_remarks"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='City',
+            name="City",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('label', models.CharField(max_length=100, verbose_name='Label')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("label", models.CharField(max_length=100, verbose_name="Label")),
             ],
             options={
-                'abstract': False,
-                'verbose_name_plural': 'Cities',
+                "abstract": False,
+                "verbose_name_plural": "Cities",
             },
         ),
         migrations.CreateModel(
-            name='Theme',
+            name="Theme",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('label', models.CharField(max_length=100, verbose_name='Label')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("label", models.CharField(max_length=100, verbose_name="Label")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddField(
-            model_name='viewpoint',
-            name='city',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='viewpoints', to='terra_opp.City'),
+            model_name="viewpoint",
+            name="city",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="viewpoints",
+                to="terra_opp.City",
+            ),
         ),
         migrations.AddField(
-            model_name='viewpoint',
-            name='themes',
-            field=models.ManyToManyField(related_name='viewpoints', to='terra_opp.Theme'),
+            model_name="viewpoint",
+            name="themes",
+            field=models.ManyToManyField(
+                related_name="viewpoints", to="terra_opp.Theme"
+            ),
         ),
-        migrations.RunPython(set_city_and_themes_from_properties, reverse_code=migrations.RunPython.noop),
+        migrations.RunPython(
+            set_city_and_themes_from_properties, reverse_code=migrations.RunPython.noop
+        ),
     ]

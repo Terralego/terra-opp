@@ -16,7 +16,12 @@ from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 
-from .filters import CampaignFilterBackend, JsonFilterBackend, ViewpointFilterSet, SchemaAwareDjangoFilterBackend
+from .filters import (
+    CampaignFilterBackend,
+    JsonFilterBackend,
+    ViewpointFilterSet,
+    SchemaAwareDjangoFilterBackend,
+)
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .point_utilities import remove_point_thumbnail, update_point_properties
@@ -48,28 +53,28 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     filterset_class = ViewpointFilterSet
     filter_fields_schema = [
         coreapi.Field(
-            name='pictures__id',
+            name="pictures__id",
             required=False,
-            location='query',
+            location="query",
             schema=coreschema.Integer(
                 title="Picture id",
                 description="Picture id to filter on",
             ),
         ),
         coreapi.Field(
-            name='pictures__owner__uuid',
+            name="pictures__owner__uuid",
             required=False,
-            location='query',
+            location="query",
             schema=coreschema.Integer(
                 title="Photographer uuid",
                 description="Photographer uuid to filter on",
             ),
         ),
     ]
-    filter_fields = ['pictures']
-    search_fields = ('label', )
+    filter_fields = ["pictures"]
+    search_fields = ("label",)
     pagination_class = RestPageNumberPagination
-    template_name = 'terra_opp/viewpoint_pdf.html'
+    template_name = "terra_opp/viewpoint_pdf.html"
 
     def perform_create(self, serializer):
         serializer.save()
@@ -84,28 +89,28 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         instance.delete()
         # FIXME This may be better if done directly in geostore
         # FIXME Try to be more precise and delete only the related feature's tile in cache
-        cache.delete('tile_cache_*')  # delete all the cached tiles
+        cache.delete("tile_cache_*")  # delete all the cached tiles
 
     def filter_queryset(self, queryset):
         # We must reorder the queryset here because initial filtering in
         # viewpoint model is not done right see
         # https://github.com/encode/django-rest-framework/issues/1717
-        return super().filter_queryset(queryset).order_by('-created_at')
+        return super().filter_queryset(queryset).order_by("-created_at")
 
     def get_queryset(self):
         qs = Viewpoint.objects.with_accepted_pictures()
         if self.request.user.is_authenticated:
             qs = Viewpoint.objects.all().distinct()
-        pictures_qs = Picture.objects.order_by('-created_at')
-        return qs.select_related('point', 'city').prefetch_related(
-            'pictures',
-            'related',
-            Prefetch('pictures', queryset=pictures_qs, to_attr='_ordered_pics'),
-            'themes',
+        pictures_qs = Picture.objects.order_by("-created_at")
+        return qs.select_related("point", "city").prefetch_related(
+            "pictures",
+            "related",
+            Prefetch("pictures", queryset=pictures_qs, to_attr="_ordered_pics"),
+            "themes",
         )
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == "list":
             if self.request.user.is_anonymous:
                 return SimpleViewpointSerializer
             return SimpleAuthenticatedViewpointSerializer
@@ -116,15 +121,16 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         filter_values = {}
         for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
             data = None
-            transform = KeyTransform(field['json_key'], 'properties')
-            queryset = (Viewpoint.objects
-                        .annotate(**{key: transform})
-                        .exclude(**{f"{key}__isnull": True})
-                        .values_list(key, flat=True))
-            if field['type'] == 'single':
+            transform = KeyTransform(field["json_key"], "properties")
+            queryset = (
+                Viewpoint.objects.annotate(**{key: transform})
+                .exclude(**{f"{key}__isnull": True})
+                .values_list(key, flat=True)
+            )
+            if field["type"] == "single":
                 # Dedupe and sort with SQL
                 data = queryset.order_by(key).distinct(key)
-            elif field['type'] == 'many':
+            elif field["type"] == "many":
                 # Dedupe and sort programmatically
                 data = list(queryset)
                 if data:
@@ -133,65 +139,102 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             if data is not None:
                 filter_values[key] = data
 
-        filter_values['photographers'] = PhotographSerializer(
+        filter_values["photographers"] = PhotographSerializer(
             get_user_model().objects.filter(pictures__isnull=False).distinct(),
             many=True,
         ).data
 
         # FIXME We may want to set all cities and themes as uniques directly in the model?
-        filter_values['cities'] = City.objects.exclude(label__isnull=True).exclude(label__exact='').distinct().order_by(
-            'label',
-        ).values_list(
-            'label',
-            flat=True,
+        filter_values["cities"] = (
+            City.objects.exclude(label__isnull=True)
+            .exclude(label__exact="")
+            .distinct()
+            .order_by(
+                "label",
+            )
+            .values_list(
+                "label",
+                flat=True,
+            )
         )
-        filter_values['themes'] = Theme.objects.exclude(label__isnull=True).exclude(
-            label__exact='',
-        ).distinct().order_by(
-            'label',
-        ).values_list(
-            'label',
-            flat=True,
+        filter_values["themes"] = (
+            Theme.objects.exclude(label__isnull=True)
+            .exclude(
+                label__exact="",
+            )
+            .distinct()
+            .order_by(
+                "label",
+            )
+            .values_list(
+                "label",
+                flat=True,
+            )
         )
 
         return Response(filter_values)
 
     @method_decorator(cache_page(60 * 5))
-    @action(detail=True, methods=['get', ], renderer_classes=[ZipRenderer], url_path='zip-pictures')
+    @action(
+        detail=True,
+        methods=[
+            "get",
+        ],
+        renderer_classes=[ZipRenderer],
+        url_path="zip-pictures",
+    )
     def zip_pictures(self, request, *args, **kwargs):
-        qs = self.get_object().pictures.filter(
-            state__gte=settings.TROPP_STATES.ACCEPTED,
-        ).only('file')
+        qs = (
+            self.get_object()
+            .pictures.filter(
+                state__gte=settings.TROPP_STATES.ACCEPTED,
+            )
+            .only("file")
+        )
         return Response([p.file for p in qs])
 
     @method_decorator(cache_page(60 * 5))
-    @action(detail=True, methods=['get', ], renderer_classes=[PdfRenderer])
+    @action(
+        detail=True,
+        methods=[
+            "get",
+        ],
+        renderer_classes=[PdfRenderer],
+    )
     def pdf(self, request, *args, **kwargs):
-        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET['pdf']
-        return Response({
-            'viewpoint': self.get_object(),
-            'properties_set': properties_set,
-        })
+        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET["pdf"]
+        return Response(
+            {
+                "viewpoint": self.get_object(),
+                "properties_set": properties_set,
+            }
+        )
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all()
     permission_classes = [permissions.DjangoModelPermissions]
-    http_method_names = ['get', 'post', 'put', 'delete', 'options']
+    http_method_names = ["get", "post", "put", "delete", "options"]
     filter_backends = (CampaignFilterBackend, SearchFilter)
-    search_fields = ('label', )
+    search_fields = ("label",)
     pagination_class = RestPageNumberPagination
 
     def get_queryset(self):
         # Filter only on assigned campaigns for photographs
         user = self.request.user
-        pictures_qs = Picture.objects.order_by('-created_at')
-        qs = super().get_queryset().prefetch_related(
-            Prefetch('viewpoints__pictures', queryset=pictures_qs,
-                     to_attr='ordered_pics')
+        pictures_qs = Picture.objects.order_by("-created_at")
+        qs = (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "viewpoints__pictures", queryset=pictures_qs, to_attr="ordered_pics"
+                )
+            )
         )
-        if (self.action == 'list' and
-                not user.has_perm('terra_opp.manage_all_campaigns')):
+        if self.action == "list" and not user.has_perm(
+            "terra_opp.manage_all_campaigns"
+        ):
             return qs.filter(assignee=user)
         return qs
 
@@ -200,15 +243,15 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
     def check_object_permissions(self, request, obj: Campaign):
         # Prevent acting on unassigned campaigns for photographs
-        if (not request.user.has_perm('terra_opp.manage_all_campaigns') and
-                obj.assignee != request.user):
+        has_perm = request.user.has_perm("terra_opp.manage_all_campaigns")
+        if not has_perm and obj.assignee != request.user:
             self.permission_denied(request)
         super().check_object_permissions(request, obj)
 
     def get_serializer_class(self):
-        if self.action == 'list':
+        if self.action == "list":
             return ListCampaignNestedSerializer
-        if self.action == 'retrieve':
+        if self.action == "retrieve":
             if self.request.user.is_anonymous:
                 return DetailCampaignNestedSerializer
             return DetailAuthenticatedCampaignNestedSerializer
