@@ -6,7 +6,7 @@ from geostore.models import Layer
 
 
 class Command(BaseCommand):
-    help = _("Create a django-geostore point layer to store observatory viewpoints")
+    help = "Create a django-geostore point layer to store observatory viewpoints"
 
     def add_arguments(self, parser):
         parser.add_argument(
