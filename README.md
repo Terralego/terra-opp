@@ -62,3 +62,36 @@ And then you must refer to this custom url fetcher in your settings. Example if 
 ```python
 TROPP_URL_FETCHER = 'custom.fetcher.custom_url_fetcher'
 ```
+
+## To start a dev instance
+
+Define settings you wants in `test_opp` django project.
+
+```sh
+docker-compose up
+```
+
+Then initialize the database:
+
+```sh
+docker-compose exec web /code/venv/bin/python3 /code/src/manage.py migrate
+```
+
+and create the base layer:
+
+```sh
+docker-compose exec web /code/venv/bin/python3 /code/src/manage.py create_observatory_layer -n observatory
+```
+
+You can now edit your code. A django runserver is launched internally so the
+this is an autoreload server.
+
+You can access to the api on http://localhost:8000/api/
+
+## Test
+
+To run test suite, just launch:
+
+```sh
+docker-compose exec web /code/venv/bin/python3 /code/src/manage.py test
+```

@@ -10,3 +10,5 @@ __pycache__/
 .tox/
 .coverage
 .cache
+
+test_opp/media

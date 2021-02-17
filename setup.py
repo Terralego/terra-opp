@@ -8,7 +8,6 @@ HERE = os.path.abspath(os.path.dirname(__file__))
 README = open(os.path.join(HERE, 'README.md')).read()
 CHANGES = open(os.path.join(HERE, 'CHANGES.md')).read()
 
-
 setup(
     name='terra-opp',
     version=open(os.path.join(HERE, 'terra_opp', 'VERSION.md')).read().strip(),
@@ -17,7 +16,6 @@ setup(
     author_email="terralego-pypi@makina-corpus.com",
     description='Observatoire Photographique des Paysages',
     long_description=README + '\n\n' + CHANGES,
-    description_content_type="text/markdown",
     long_description_content_type="text/markdown",
     packages=find_packages(),
     url='https://github.com/Terralego/terra-opp.git',
@@ -55,6 +53,7 @@ setup(
         'dev': [
             'factory-boy',
             'flake8',
+            'black',
             'coverage',
         ]
     }
