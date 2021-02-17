@@ -1,0 +1,71 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-02-17 11:01+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: terra_opp/apps.py:13
+msgid "Can manage viewpoints"
+msgstr "OPP - Gestion des points de vue"
+
+#: terra_opp/apps.py:14
+msgid "Can manage pictures"
+msgstr "OPP - Gestion des photos"
+
+#: terra_opp/models.py:17
+msgid "Label"
+msgstr "Label"
+
+#: terra_opp/models.py:35
+msgid "Cities"
+msgstr "Villes"
+
+#: terra_opp/models.py:58 terra_opp/models.py:165
+msgid "Properties"
+msgstr "Propriétés"
+
+#: terra_opp/models.py:106 terra_opp/models.py:151
+msgid "Owner"
+msgstr "Autheur"
+
+#: terra_opp/models.py:112
+msgid "Assigned to"
+msgstr "Assigné à"
+
+#: terra_opp/models.py:161
+msgid "State"
+msgstr "État"
+
+#: terra_opp/models.py:166
+msgid "File"
+msgstr "Fichier"
+
+#: terra_opp/models.py:169
+msgid "Date"
+msgstr "Date"
+
+#: terra_opp/templates/terra_opp/viewpoint_pdf.html:14
+msgid "Site"
+msgstr "Site"
+
+#: terra_opp/templates/terra_opp/viewpoint_pdf.html:25
+msgid "Reference shooting"
+msgstr "Photo de référence"
+
+#: terra_opp/templates/terra_opp/viewpoint_pdf.html:27
+msgid "Last shot"
+msgstr "Dernière prise de vue"
