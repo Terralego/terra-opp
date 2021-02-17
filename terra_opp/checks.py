@@ -1,5 +1,7 @@
 from django.core.checks import Warning, Error, register
 from django.conf import settings
+from geostore import models
+from django.db.utils import ProgrammingError
 
 
 @register()
@@ -20,6 +22,25 @@ def check_dedicated_layer(app_configs, **kwargs):
                 id='terra_opp.E002',
             )
         )
+    else:
+        try:
+            opp_layer = models.Layer.objects.get(id=observatory_layer_pk)
+        except models.Layer.DoesNotExist:
+            errors.append(
+                Warning(
+                    f"Layer with id={observatory_layer_pk} seems missing. Are you sure you've created a layer with this id?",
+                    hint="""
+                        Create a dedicated point layer with ./manage.py create_observatory_layer and set
+                        TROPP_OBSERVATORY_LAYER_PK with given PK.
+                        ex: TROPP_OBSERVATORY_LAYER_PK=4
+                        """,
+                    obj=None,
+                    id='terra_opp.E003',
+                )
+            )
+        except ProgrammingError:
+            # Database not initialized ?
+            pass
     return errors
 
 
