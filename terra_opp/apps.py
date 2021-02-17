@@ -18,6 +18,8 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
         from . import checks  # NOQA
         from geostore import models
 
+        super().ready()
+
         # Set default settings from this app to django.settings if not present
         from . import settings as defaults
 
