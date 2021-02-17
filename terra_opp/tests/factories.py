@@ -6,53 +6,39 @@ from terra_opp.models import Campaign, City, Picture, Theme, Viewpoint
 
 
 class CampaignFactory(factory.django.DjangoModelFactory):
-    owner = factory.SubFactory(
-        'terra_accounts.tests.factories.TerraUserFactory'
-    )
-    assignee = factory.SubFactory(
-        'terra_accounts.tests.factories.TerraUserFactory'
-    )
+    owner = factory.SubFactory("terra_accounts.tests.factories.TerraUserFactory")
+    assignee = factory.SubFactory("terra_accounts.tests.factories.TerraUserFactory")
 
     class Meta:
         model = Campaign
 
 
 class ViewpointFactory(factory.django.DjangoModelFactory):
-    point = factory.SubFactory(
-        'geostore.tests.factories.FeatureFactory'
-    )
+    point = factory.SubFactory("geostore.tests.factories.FeatureFactory")
     pictures = factory.RelatedFactory(
-        'terra_opp.tests.factories.PictureFactory', 'viewpoint'
+        "terra_opp.tests.factories.PictureFactory", "viewpoint"
     )
-    city = factory.SubFactory(
-        'terra_opp.tests.factories.CityFactory'
-    )
-    themes = factory.RelatedFactory(
-        'terra_opp.tests.factories.ThemeFactory'
-    )
+    city = factory.SubFactory("terra_opp.tests.factories.CityFactory")
+    themes = factory.RelatedFactory("terra_opp.tests.factories.ThemeFactory")
 
     class Meta:
         model = Viewpoint
 
 
 class PictureFactory(factory.django.DjangoModelFactory):
-    owner = factory.SubFactory(
-        'terra_accounts.tests.factories.TerraUserFactory'
-    )
+    owner = factory.SubFactory("terra_accounts.tests.factories.TerraUserFactory")
     date = timezone.datetime(2018, 1, 1, tzinfo=timezone.utc)
-    file = FileField(from_path='terra_opp/tests/placeholder.jpg')
+    file = FileField(from_path="terra_opp/tests/placeholder.jpg")
 
     class Meta:
         model = Picture
 
 
 class CityFactory(factory.django.DjangoModelFactory):
-
     class Meta:
         model = City
 
 
 class ThemeFactory(factory.django.DjangoModelFactory):
-
     class Meta:
         model = Theme

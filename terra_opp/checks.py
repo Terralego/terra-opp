@@ -19,12 +19,12 @@ def check_dedicated_layer(app_configs, **kwargs):
                     ex: TROPP_OBSERVATORY_LAYER_PK=4
                     """,
                 obj=None,
-                id='terra_opp.E002',
+                id="terra_opp.E002",
             )
         )
     else:
         try:
-            opp_layer = models.Layer.objects.get(id=observatory_layer_pk)
+            models.Layer.objects.get(id=observatory_layer_pk)
         except models.Layer.DoesNotExist:
             errors.append(
                 Warning(
@@ -35,7 +35,7 @@ def check_dedicated_layer(app_configs, **kwargs):
                         ex: TROPP_OBSERVATORY_LAYER_PK=4
                         """,
                     obj=None,
-                    id='terra_opp.E003',
+                    id="terra_opp.E003",
                 )
             )
         except ProgrammingError:
@@ -47,10 +47,12 @@ def check_dedicated_layer(app_configs, **kwargs):
 @register()
 def check_installed_apps(app_configs, **kwargs):
     errors = []
-    if 'versatileimagefield' not in settings.INSTALLED_APPS:
-        errors.append(Error(
-            "'terra-opp' needs 'versatileimagefield' in INSTALLED_APPS",
-            obj=None,
-            id='terra_opp.E001',
-        ))
+    if "versatileimagefield" not in settings.INSTALLED_APPS:
+        errors.append(
+            Error(
+                "'terra-opp' needs 'versatileimagefield' in INSTALLED_APPS",
+                obj=None,
+                id="terra_opp.E001",
+            )
+        )
     return errors

@@ -13,6 +13,8 @@ class AsVersatileTestCase(TestCase):
     def test_image_loader_object(self):
         self.maxDiff = None
         context = Context({"picture": self.viewpoint.pictures.all()[0]})
-        template_to_render = Template("{% load opp_tags %}{{ picture.file|as_versatile:'thumbnail__750x1500' }}")
+        template_to_render = Template(
+            "{% load opp_tags %}{{ picture.file|as_versatile:'thumbnail__750x1500' }}"
+        )
         rendered_template = template_to_render.render(context)
         self.assertIn("750x1500", rendered_template)

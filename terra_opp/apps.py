@@ -7,7 +7,7 @@ from django.db.utils import ProgrammingError
 
 
 class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
-    name = 'terra_opp'
+    name = "terra_opp"
 
     permissions = (
         ("OPP", "can_manage_viewpoints", _("Can manage viewpoints")),
@@ -20,6 +20,7 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
 
         # Set default settings from this app to django.settings if not present
         from . import settings as defaults
+
         dj_settings = settings._wrapped.__dict__
         for name in dir(defaults):
             dj_settings.setdefault(name, getattr(defaults, name))
@@ -32,16 +33,16 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
             # Db should not be initialized
             pass
         else:
-            terra_settings = getattr(settings, 'TERRA_APPLIANCE_SETTINGS', {})
-            modules = terra_settings.get('modules', {})
+            terra_settings = getattr(settings, "TERRA_APPLIANCE_SETTINGS", {})
+            modules = terra_settings.get("modules", {})
 
             # Update terra appliance settings with default OPP settings
-            modules['OPP'] = {
-                "viewpoints": reverse('terra_opp:viewpoint-list'),
-                "layer_tilejson": reverse('layer-tilejson', args=(opp_layer.pk, )),
+            modules["OPP"] = {
+                "viewpoints": reverse("terra_opp:viewpoint-list"),
+                "layer_tilejson": reverse("layer-tilejson", args=(opp_layer.pk,)),
                 "searchable_properties": settings.TROPP_SEARCHABLE_PROPERTIES,
                 "layerId": opp_layer.pk,
-                "layerName": opp_layer.name
+                "layerName": opp_layer.name,
             }
-            terra_settings.update({'modules': modules})
-            setattr(settings, 'TERRA_APPLIANCE_SETTINGS', terra_settings)
+            terra_settings.update({"modules": modules})
+            setattr(settings, "TERRA_APPLIANCE_SETTINGS", terra_settings)

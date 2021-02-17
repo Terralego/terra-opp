@@ -16,7 +16,12 @@ from terra_accounts.tests.factories import TerraUserFactory
 from geostore.models import Feature
 from geostore.tests.factories import FeatureFactory
 from terra_opp.models import Picture, Viewpoint
-from terra_opp.tests.factories import CityFactory, PictureFactory, ThemeFactory, ViewpointFactory
+from terra_opp.tests.factories import (
+    CityFactory,
+    PictureFactory,
+    ThemeFactory,
+    ViewpointFactory,
+)
 from terra_opp.tests.mixins import TestPermissionsMixin
 
 
@@ -32,19 +37,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         cls.viewpoint_with_accepted_picture = ViewpointFactory(
             label="Viewpoint with accepted picture",
             pictures__state=settings.TROPP_STATES.ACCEPTED,
-            properties={'test_update': 'ko'},
+            properties={"test_update": "ko"},
         )
         # Create viewpoints with no picture attached to it
         cls.viewpoint_without_picture = ViewpointFactory(
             label="Viewpoint without picture",
             pictures=None,
-            properties={'test_update': 'ko'},
+            properties={"test_update": "ko"},
         )
 
     def setUp(self):
         self.fp = open(
-            os.path.join(os.path.dirname(__file__), 'placeholder.jpg'),
-            'rb',
+            os.path.join(os.path.dirname(__file__), "placeholder.jpg"),
+            "rb",
         )
         self.data_create = {
             "label": "Basic viewpoint created",
@@ -54,7 +59,10 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
-            "picture_ids": [picture.pk for picture in self.viewpoint_with_accepted_picture.pictures.all()],
+            "picture_ids": [
+                picture.pk
+                for picture in self.viewpoint_with_accepted_picture.pictures.all()
+            ],
             "city": "Nantes",
         }
         self.data_create_with_themes = {
@@ -70,28 +78,24 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def test_viewpoint_get_list_anonymous(self):
         with self.assertNumQueries(6):
-            data = self.client.get(
-                reverse('terra_opp:viewpoint-list')
-            ).json()
+            data = self.client.get(reverse("terra_opp:viewpoint-list")).json()
         # List must contain all viewpoints WITHOUT those with no pictures
         # Pictures must also be ACCEPTED
-        self.assertEqual(1, data.get('count'))
+        self.assertEqual(1, data.get("count"))
 
     def test_viewpoint_get_list_with_auth(self):
         # User is now authenticated
         self.client.force_authenticate(user=self.user)
-        data = self.client.get(
-            reverse('terra_opp:viewpoint-list')
-        ).json()
+        data = self.client.get(reverse("terra_opp:viewpoint-list")).json()
         # List must still contain ALL viewpoints even those with no
         # pictures and pictures with other states than ACCEPTED
-        self.assertEqual(3, data.get('count'))
+        self.assertEqual(3, data.get("count"))
 
     def test_anonymous_access_without_accepted_picture(self):
         # User is not authenticated yet
         response = self.client.get(
             reverse(
-                'terra_opp:viewpoint-detail',
+                "terra_opp:viewpoint-detail",
                 args=[self.viewpoint_without_picture.pk],
             )
         )
@@ -103,15 +107,15 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(
             reverse(
-                'terra_opp:viewpoint-detail',
+                "terra_opp:viewpoint-detail",
                 args=[self.viewpoint_without_picture.pk],
             )
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
     def test_anonymous_options_request_returns_correct_search_filters(self):
-        city1 = CityFactory(label='Montcuq')
-        city2 = CityFactory(label='Rouperou-le-coquet')
+        city1 = CityFactory(label="Montcuq")
+        city2 = CityFactory(label="Rouperou-le-coquet")
         theme1 = ThemeFactory(label="Bar")
         theme2 = ThemeFactory(label="foo")
         ViewpointFactory(
@@ -122,116 +126,103 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             city=city2,
             themes=[theme1],
         )
-        data = self.client.get(
-            reverse('terra_opp:viewpoint-filters')
-        ).json()
-        self.assertEqual(data.get('cities'), ['Montcuq', 'Rouperou-le-coquet'])
-        self.assertEqual(data.get('themes'), ['Bar', 'foo'])
+        data = self.client.get(reverse("terra_opp:viewpoint-filters")).json()
+        self.assertEqual(data.get("cities"), ["Montcuq", "Rouperou-le-coquet"])
+        self.assertEqual(data.get("themes"), ["Bar", "foo"])
 
     def test_authenticated_options_request_returns_all_search_filters(self):
         self.client.force_authenticate(user=self.user)
-        data = self.client.get(
-            reverse('terra_opp:viewpoint-filters')
-        ).json()
-        self.assertIsNotNone(data.get('cities'))
-        self.assertIsNotNone(data.get('themes'))
+        data = self.client.get(reverse("terra_opp:viewpoint-filters")).json()
+        self.assertIsNotNone(data.get("cities"))
+        self.assertIsNotNone(data.get("themes"))
 
         # Even if we have 3 users, we only get those who have pictures
         self.assertEqual(3, get_user_model().objects.count())
-        self.assertEqual(2, len(data.get('photographers')))
+        self.assertEqual(2, len(data.get("photographers")))
 
     def test_viewpoint_search_anonymous(self):
         # Simple viewpoint search feature
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'search': 'accepted'},
+            reverse("terra_opp:viewpoint-list"),
+            {"search": "accepted"},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_search_with_auth(self):
         # Simple viewpoint search feature with auth
         self.client.force_authenticate(user=self.user)
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'search': 'Basic'},
+            reverse("terra_opp:viewpoint-list"),
+            {"search": "Basic"},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_picture_filter_anonymous(self):
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'pictures__id': self.viewpoint_with_accepted_picture.pictures
-                .first().pk},
+            reverse("terra_opp:viewpoint-list"),
+            {"pictures__id": self.viewpoint_with_accepted_picture.pictures.first().pk},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_picture_filter_with_auth(self):
         self.client.force_authenticate(user=self.user)
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'pictures__id': self.viewpoint_with_accepted_picture.pictures
-                .first().pk},
+            reverse("terra_opp:viewpoint-list"),
+            {"pictures__id": self.viewpoint_with_accepted_picture.pictures.first().pk},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_photographer_filter_anonymous(self):
         picture = self.viewpoint_with_accepted_picture.pictures.first()
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'pictures__owner__uuid': picture.owner.uuid},
+            reverse("terra_opp:viewpoint-list"),
+            {"pictures__owner__uuid": picture.owner.uuid},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_photographer_filter_with_auth(self):
         self.client.force_authenticate(user=self.user)
         picture = self.viewpoint_with_accepted_picture.pictures.first()
         data = self.client.get(
-            reverse('terra_opp:viewpoint-list'),
-            {'pictures__owner__uuid': picture.owner.uuid},
+            reverse("terra_opp:viewpoint-list"),
+            {"pictures__owner__uuid": picture.owner.uuid},
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_search_date(self):
-        list_url = reverse('terra_opp:viewpoint-list')
+        list_url = reverse("terra_opp:viewpoint-list")
         picture = self.viewpoint_with_accepted_picture.pictures.first()
         data = self.client.get(
-            list_url,
-            {'date_from': (picture.date - timedelta(days=1)).date()}
+            list_url, {"date_from": (picture.date - timedelta(days=1)).date()}
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
         data = self.client.get(
-            list_url,
-            {'date_from': (picture.date + timedelta(days=1)).date()}
+            list_url, {"date_from": (picture.date + timedelta(days=1)).date()}
         ).json()
-        self.assertEqual(data.get('count'), 0)
+        self.assertEqual(data.get("count"), 0)
         data = self.client.get(
-            list_url,
-            {'date_to': (picture.date + timedelta(days=1)).date()}
+            list_url, {"date_to": (picture.date + timedelta(days=1)).date()}
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
         data = self.client.get(
-            list_url,
-            {'date_to': (picture.date - timedelta(days=1)).date()}
+            list_url, {"date_to": (picture.date - timedelta(days=1)).date()}
         ).json()
-        self.assertEqual(data.get('count'), 0)
+        self.assertEqual(data.get("count"), 0)
         data = self.client.get(
             list_url,
             {
-                'date_from': (picture.date - timedelta(days=1)).date(),
-                'date_to': (picture.date + timedelta(days=1)).date(),
-            }
+                "date_from": (picture.date - timedelta(days=1)).date(),
+                "date_to": (picture.date + timedelta(days=1)).date(),
+            },
         ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(data.get("count"), 1)
 
         # Errors
-        response = self.client.get(
-            list_url,
-            {'date_to': 'haha'}
-        )
+        response = self.client.get(list_url, {"date_to": "haha"})
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_viewpoint_search_json(self):
-        list_url = reverse('terra_opp:viewpoint-list')
+        list_url = reverse("terra_opp:viewpoint-list")
         ViewpointFactory(
             label="Viewpoint for search",
             pictures__state=settings.TROPP_STATES.ACCEPTED,
@@ -240,30 +231,26 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                 "site": "Carrière des petits violoncelles",
             },
         )
-        self.assertEqual(self.client.get(list_url).json()['count'], 2)
-        data = self.client.get(list_url, {'properties__voie': 'rue'}).json()
-        self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'properties__site': 'carrière'}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(self.client.get(list_url).json()["count"], 2)
+        data = self.client.get(list_url, {"properties__voie": "rue"}).json()
+        self.assertEqual(data.get("count"), 1)
+        data = self.client.get(list_url, {"properties__site": "carrière"}).json()
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_search_city(self):
-        list_url = reverse('terra_opp:viewpoint-list')
-        city = CityFactory(label='Rouperou-le-coquet')
+        list_url = reverse("terra_opp:viewpoint-list")
+        city = CityFactory(label="Rouperou-le-coquet")
         ViewpointFactory(
             label="Viewpoint for search",
             pictures__state=settings.TROPP_STATES.ACCEPTED,
             city=city,
         )
-        self.assertEqual(self.client.get(list_url).json()['count'], 2)
-        data = self.client.get(
-            list_url, {'city': 'Rouperou-le-coquet'}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
+        self.assertEqual(self.client.get(list_url).json()["count"], 2)
+        data = self.client.get(list_url, {"city": "Rouperou-le-coquet"}).json()
+        self.assertEqual(data.get("count"), 1)
 
     def test_viewpoint_search_themes(self):
-        list_url = reverse('terra_opp:viewpoint-list')
+        list_url = reverse("terra_opp:viewpoint-list")
         theme_foo = ThemeFactory(label="foo")
         theme_bar = ThemeFactory(label="bar")
         theme_baz = ThemeFactory(label="baz")
@@ -276,30 +263,27 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             },
         )
         vp.themes.add(theme_foo, theme_bar, theme_baz)
-        self.assertEqual(self.client.get(list_url).json()['count'], 2)
-        data = self.client.get(
-            list_url, {'themes': ['foo']}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'themes': ['bar', 'foo']}
-        ).json()
-        self.assertEqual(data.get('count'), 1)
-        data = self.client.get(
-            list_url, {'themes': ['bar', 'foobar']}
-        ).json()
-        self.assertEqual(data.get('count'), 0)
+        self.assertEqual(self.client.get(list_url).json()["count"], 2)
+        data = self.client.get(list_url, {"themes": ["foo"]}).json()
+        self.assertEqual(data.get("count"), 1)
+        data = self.client.get(list_url, {"themes": ["bar", "foo"]}).json()
+        self.assertEqual(data.get("count"), 1)
+        data = self.client.get(list_url, {"themes": ["bar", "foobar"]}).json()
+        self.assertEqual(data.get("count"), 0)
 
     def _viewpoint_create(self):
         return self.client.post(
-            reverse('terra_opp:viewpoint-list'),
+            reverse("terra_opp:viewpoint-list"),
             self.data_create,
         )
 
     def test_viewpoint_create_anonymous(self):
         response = self._viewpoint_create()
         # User is not authenticated
-        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
 
     def test_viewpoint_create_with_auth(self):
         self.client.force_authenticate(user=self.user)
@@ -309,14 +293,18 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def test_viewpoint_create_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_viewpoint', ])
+        self._set_permissions(
+            [
+                "add_viewpoint",
+            ]
+        )
         response = self._viewpoint_create()
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
     def _viewpoint_create_with_picture(self):
         return self.client.post(
-            reverse('terra_opp:viewpoint-list'),
+            reverse("terra_opp:viewpoint-list"),
             self.data_create_with_picture,
             format="multipart",
         )
@@ -324,7 +312,10 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
     def test_viewpoint_create_with_picture_anonymous(self):
         response = self._viewpoint_create_with_picture()
         # User is not authenticated
-        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
 
     def test_viewpoint_create_with_picture_with_auth(self):
         self.client.force_authenticate(user=self.user)
@@ -334,85 +325,108 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def test_viewpoint_create_with_picture_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_viewpoint', ])
+        self._set_permissions(
+            [
+                "add_viewpoint",
+            ]
+        )
         response = self._viewpoint_create_with_picture()
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertIn(
-            'placeholder',
-            Viewpoint.objects.get(label='Viewpoint created with picture').point.properties['viewpoint_picture'],
+            "placeholder",
+            Viewpoint.objects.get(
+                label="Viewpoint created with picture"
+            ).point.properties["viewpoint_picture"],
         )
 
     def test_viewpoint_create_with_themes_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_viewpoint', ])
+        self._set_permissions(
+            [
+                "add_viewpoint",
+            ]
+        )
         response = self.client.post(
-            reverse('terra_opp:viewpoint-list'),
+            reverse("terra_opp:viewpoint-list"),
             self.data_create_with_themes,
         )
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertListEqual(
-            list(Viewpoint.objects.get(label='Viewpoint created with themes').themes.all().values_list('label', flat=True)),
+            list(
+                Viewpoint.objects.get(label="Viewpoint created with themes")
+                .themes.all()
+                .values_list("label", flat=True)
+            ),
             ["foo", "bar"],
         )
 
-    @patch('datastore.fields.FileBase64Field.to_internal_value')
+    @patch("datastore.fields.FileBase64Field.to_internal_value")
     def test_viewpoint_create_with_related_docs(self, field):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_viewpoint', 'change_viewpoint'])
+        self._set_permissions(["add_viewpoint", "change_viewpoint"])
         self.fp.seek(0)
-        document = (f'data:image/jpg;base64,'
-                    f'{(base64.b64encode(self.fp.read())).decode("utf-8")}')
+        document = (
+            f"data:image/jpg;base64,"
+            f'{(base64.b64encode(self.fp.read())).decode("utf-8")}'
+        )
         field.return_value = UploadedFile(
             self.fp,
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         response = self.client.post(
-            reverse('terra_opp:viewpoint-list'),
+            reverse("terra_opp:viewpoint-list"),
             {
                 "label": "Viewpoint created with picture",
                 "point": self.feature.geom.json,
-                "related": [{
-                    "key": "croquis",
-                    "document": document,
-                }],
-                "city": 'Nantes',
+                "related": [
+                    {
+                        "key": "croquis",
+                        "document": document,
+                    }
+                ],
+                "city": "Nantes",
             },
             format="json",
         )
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         data = response.json()
-        self.assertEqual(1, len(data['related']))
-        self.assertEqual('croquis', data['related'][0]['key'])
+        self.assertEqual(1, len(data["related"]))
+        self.assertEqual("croquis", data["related"][0]["key"])
 
         # Update it
         response = self.client.patch(
-            reverse('terra_opp:viewpoint-detail', args=[data['id']]),
+            reverse("terra_opp:viewpoint-detail", args=[data["id"]]),
             {
-                "related": [{
-                    "key": "emplacement",
-                    "document": document,
-                }]
+                "related": [
+                    {
+                        "key": "emplacement",
+                        "document": document,
+                    }
+                ]
             },
             format="json",
         )
         # Request is correctly constructed and viewpoint has been updated
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         data = response.json()
-        self.assertEqual(1, len(data['related']))
-        self.assertEqual('emplacement', data['related'][0]['key'])
+        self.assertEqual(1, len(data["related"]))
+        self.assertEqual("emplacement", data["related"][0]["key"])
 
     def _viewpoint_delete(self):
         return self.client.delete(
-            reverse('terra_opp:viewpoint-detail', args=[self.viewpoint.pk])
+            reverse("terra_opp:viewpoint-detail", args=[self.viewpoint.pk])
         )
 
     def test_viewpoint_delete_anonymous(self):
         response = self._viewpoint_delete()
         # User is not authenticated
-        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
 
     def test_viewpoint_delete_with_auth(self):
         self.client.force_authenticate(user=self.user)
@@ -422,30 +436,36 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def test_viewpoint_delete_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['delete_viewpoint', ])
+        self._set_permissions(
+            [
+                "delete_viewpoint",
+            ]
+        )
         response = self._viewpoint_delete()
         # User have permission
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
 
     def _viewpoint_update(self):
         return self.client.patch(
-            reverse('terra_opp:viewpoint-detail', args=[
-                self.viewpoint_with_accepted_picture.pk]),
+            reverse(
+                "terra_opp:viewpoint-detail",
+                args=[self.viewpoint_with_accepted_picture.pk],
+            ),
             {
-                'label': 'test',
-                'properties': {'test_update': 'ok'},
-                'point': {
-                    "type": "Point",
-                    "coordinates": [0.0, 1.0]
-                }
+                "label": "test",
+                "properties": {"test_update": "ok"},
+                "point": {"type": "Point", "coordinates": [0.0, 1.0]},
             },
-            format='json',
+            format="json",
         )
 
     def test_viewpoint_update_anonymous(self):
         response = self._viewpoint_update()
         # User is not authenticated
-        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
+        self.assertIn(
+            response.status_code,
+            [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN],
+        )
 
     def test_viewpoint_update_with_auth(self):
         self.client.force_authenticate(user=self.user)
@@ -456,7 +476,11 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def test_viewpoint_update_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['change_viewpoint', ])
+        self._set_permissions(
+            [
+                "change_viewpoint",
+            ]
+        )
 
         response = self._viewpoint_update()
 
@@ -464,45 +488,41 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         # Check if the viewpoint is correctly updated
-        viewpoint = Viewpoint.objects.get(
-            pk=self.viewpoint_with_accepted_picture.pk
-        )
-        self.assertEqual(response.data['label'], viewpoint.label)
+        viewpoint = Viewpoint.objects.get(pk=self.viewpoint_with_accepted_picture.pk)
+        self.assertEqual(response.data["label"], viewpoint.label)
         self.assertEqual(
-            response.data['properties']['test_update'],
-            viewpoint.properties['test_update']
+            response.data["properties"]["test_update"],
+            viewpoint.properties["test_update"],
         )
 
         # Check if the viewpoint's feature is correctly updated
-        feature = Feature.objects.get(
-            pk=self.viewpoint_with_accepted_picture.point.pk
+        feature = Feature.objects.get(pk=self.viewpoint_with_accepted_picture.point.pk)
+        self.assertEqual(response.data["label"], feature.properties["viewpoint_label"])
+        self.assertEqual(
+            self.viewpoint_with_accepted_picture.pk, feature.properties["viewpoint_id"]
         )
         self.assertEqual(
-            response.data['label'],
-            feature.properties['viewpoint_label']
-        )
-        self.assertEqual(
-            self.viewpoint_with_accepted_picture.pk,
-            feature.properties['viewpoint_id']
-        )
-        self.assertEqual(
-            response.data['point']['coordinates'],
-            [feature.geom.coords[0], feature.geom.coords[1]]
+            response.data["point"]["coordinates"],
+            [feature.geom.coords[0], feature.geom.coords[1]],
         )
 
     def test_add_picture_on_viewpoint_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['change_viewpoint', ])
+        self._set_permissions(
+            [
+                "change_viewpoint",
+            ]
+        )
 
         # We create a more recent picture
         date = timezone.datetime(2019, 1, 1, tzinfo=timezone.utc)
         file = SimpleUploadedFile(
-            name='test.jpg',
+            name="test.jpg",
             content=open(
-                'terra_opp/tests/placeholder.jpg',
-                'rb',
+                "terra_opp/tests/placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         picture = Picture.objects.create(
             viewpoint=self.viewpoint_with_accepted_picture,
@@ -512,46 +532,41 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             state=settings.TROPP_STATES.ACCEPTED,
         )
         response = self.client.patch(
-            reverse('terra_opp:viewpoint-detail', args=[
-                self.viewpoint_with_accepted_picture.pk,
-            ]),
-            {
-                'picture_ids': [picture.id]
-            },
+            reverse(
+                "terra_opp:viewpoint-detail",
+                args=[
+                    self.viewpoint_with_accepted_picture.pk,
+                ],
+            ),
+            {"picture_ids": [picture.id]},
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        viewpoint = Viewpoint.objects.get(
-            pk=self.viewpoint_with_accepted_picture.pk
-        )
+        viewpoint = Viewpoint.objects.get(pk=self.viewpoint_with_accepted_picture.pk)
         self.assertEqual(1, viewpoint.pictures.count())
-        self.assertIn(
-            file.name.split('.')[0],
-            viewpoint.pictures.latest().file.name
-        )
+        self.assertIn(file.name.split(".")[0], viewpoint.pictures.latest().file.name)
 
-        feature = Feature.objects.get(
-            pk=self.viewpoint_with_accepted_picture.point.pk
-        )
+        feature = Feature.objects.get(pk=self.viewpoint_with_accepted_picture.point.pk)
         # Check if the feature has been updated after patching
-        self.assertIn(
-            file.name.split('.')[0],
-            feature.properties['viewpoint_picture']
-        )
+        self.assertIn(file.name.split(".")[0], feature.properties["viewpoint_picture"])
 
     def test_add_older_picture_on_viewpoint_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['change_viewpoint', ])
+        self._set_permissions(
+            [
+                "change_viewpoint",
+            ]
+        )
 
         # We create an older picture
         date = timezone.datetime(1950, 1, 1, tzinfo=timezone.utc)
         file = SimpleUploadedFile(
-            name='test_older.jpg',
+            name="test_older.jpg",
             content=open(
-                'terra_opp/tests/placeholder.jpg',
-                'rb',
+                "terra_opp/tests/placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         picture = Picture.objects.create(
             viewpoint=self.viewpoint_with_accepted_picture,
@@ -560,60 +575,49 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             file=file,
             state=settings.TROPP_STATES.ACCEPTED,
         )
+        picture_ids = [
+            pic.id for pic in self.viewpoint_with_accepted_picture.pictures.all()
+        ]
+        picture_ids.append(picture.id)
         response = self.client.patch(
-            reverse('terra_opp:viewpoint-detail', args=[
-                self.viewpoint_with_accepted_picture.pk,
-            ]),
-            {
-                'picture_ids': [pic.id for pic in self.viewpoint_with_accepted_picture.pictures.all()] + [picture.id]
-            },
+            reverse(
+                "terra_opp:viewpoint-detail",
+                args=[
+                    self.viewpoint_with_accepted_picture.pk,
+                ],
+            ),
+            {"picture_ids": picture_ids},
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
-        viewpoint = Viewpoint.objects.get(
-            pk=self.viewpoint_with_accepted_picture.pk
-        )
+        viewpoint = Viewpoint.objects.get(pk=self.viewpoint_with_accepted_picture.pk)
         self.assertEqual(2, viewpoint.pictures.count())
-        self.assertNotIn(
-            file.name.split('.')[0],
-            viewpoint.pictures.latest().file.name
-        )
+        self.assertNotIn(file.name.split(".")[0], viewpoint.pictures.latest().file.name)
 
-        feature = Feature.objects.get(
-            pk=self.viewpoint_with_accepted_picture.point.pk
-        )
+        feature = Feature.objects.get(pk=self.viewpoint_with_accepted_picture.point.pk)
         # Check that the feature has not been updated after patching
         self.assertNotIn(
-            file.name.split('.')[0],
-            feature.properties['viewpoint_picture']
+            file.name.split(".")[0], feature.properties["viewpoint_picture"]
         )
 
     def test_ordering_in_list_view(self):
         self.client.force_authenticate(user=self.user)
-        data = self.client.get(
-            reverse('terra_opp:viewpoint-list')
-        ).json()
+        data = self.client.get(reverse("terra_opp:viewpoint-list")).json()
         # Now test that viewpoints are ordered in chronological order
-        first_viewpoint = Viewpoint.objects.get(
-            id=data.get('results')[0]['id']
-        )
-        second_viewpoint = Viewpoint.objects.get(
-            id=data.get('results')[1]['id']
-        )
-        self.assertTrue(
-            first_viewpoint.created_at > second_viewpoint.created_at
-        )
+        first_viewpoint = Viewpoint.objects.get(id=data.get("results")[0]["id"])
+        second_viewpoint = Viewpoint.objects.get(id=data.get("results")[1]["id"])
+        self.assertTrue(first_viewpoint.created_at > second_viewpoint.created_at)
 
     def test_list_viewset_return_distinct_objects(self):
         # We add a more recent picture to the viewpoint
         date = timezone.datetime(2019, 1, 1, tzinfo=timezone.utc)
         file = SimpleUploadedFile(
-            name='test.jpg',
+            name="test.jpg",
             content=open(
-                'terra_opp/tests/placeholder.jpg',
-                'rb',
+                "terra_opp/tests/placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         Picture.objects.create(
             viewpoint=self.viewpoint_with_accepted_picture,
@@ -624,178 +628,224 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         )
 
         # Viewpoint should appears only once in the list
-        data = self.client.get(
-            reverse('terra_opp:viewpoint-list')
-        ).json()
-        self.assertEqual(1, data.get('count'))
+        data = self.client.get(reverse("terra_opp:viewpoint-list")).json()
+        self.assertEqual(1, data.get("count"))
 
     def test_pdf_view_must_return_pdf_when_authenticated(self):
         self.client.force_authenticate(user=self.user)
         data = self.client.get(
             reverse(
-                'terra_opp:viewpoint-pdf',
+                "terra_opp:viewpoint-pdf",
                 args=[self.viewpoint.pk],
             )
         )
         self.assertEqual(status.HTTP_200_OK, data.status_code)
-        self.assertIn('application/pdf', data['Content-Type'])
+        self.assertIn("application/pdf", data["Content-Type"])
 
     def test_options_request_on_zip_pictures_must_return_200(self):
         data = self.client.options(
             reverse(
-                'terra_opp:viewpoint-zip-pictures',
-                args=[self.viewpoint_with_accepted_picture.pk, ],
+                "terra_opp:viewpoint-zip-pictures",
+                args=[
+                    self.viewpoint_with_accepted_picture.pk,
+                ],
             )
         )
         self.assertEqual(status.HTTP_200_OK, data.status_code)
-        self.assertIn('application/zip', data['Content-Type'])
+        self.assertIn("application/zip", data["Content-Type"])
 
     def test_get_request_on_zip_pictures_must_return_a_zip_with_accepted_pictures(self):
         data = self.client.get(
             reverse(
-                'terra_opp:viewpoint-zip-pictures',
-                args=[self.viewpoint_with_accepted_picture.pk, ],
+                "terra_opp:viewpoint-zip-pictures",
+                args=[
+                    self.viewpoint_with_accepted_picture.pk,
+                ],
             )
         )
         self.assertEqual(status.HTTP_200_OK, data.status_code)
-        self.assertIn('application/zip', data['Content-Type'])
+        self.assertIn("application/zip", data["Content-Type"])
         self.assertEqual(1, len(data.data))
 
     def test_add_picture_on_viewpoint_must_update_feature_properties(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_picture', ])
+        self._set_permissions(
+            [
+                "add_picture",
+            ]
+        )
 
         # should be equal to 1
         picture_count = self.viewpoint_with_accepted_picture.pictures.count()
 
         file = SimpleUploadedFile(
-            name='add_picture_test.jpg',
+            name="add_picture_test.jpg",
             content=open(
-                'terra_opp/tests/placeholder.jpg',
-                'rb',
+                "terra_opp/tests/placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         data = {
-            'viewpoint': self.viewpoint_with_accepted_picture.pk,
-            'date': timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
-            'file': file,
-            'state': settings.TROPP_STATES.ACCEPTED,
+            "viewpoint": self.viewpoint_with_accepted_picture.pk,
+            "date": timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
+            "file": file,
+            "state": settings.TROPP_STATES.ACCEPTED,
         }
         # this request must create a new picture on the viewpoint and update it's feature properties
         response = self.client.post(
-            reverse('terra_opp:picture-list'),
+            reverse("terra_opp:picture-list"),
             data,
             format="multipart",
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(self.viewpoint_with_accepted_picture.pictures.count(), picture_count + 1)
+        self.assertEqual(
+            self.viewpoint_with_accepted_picture.pictures.count(), picture_count + 1
+        )
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
         self.assertIn(
-            file.name.split('.')[0],
-            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+            file.name.split(".")[0],
+            self.viewpoint_with_accepted_picture.point.properties["viewpoint_picture"],
         )
 
-    def test_add_picture_on_viewpoint_with_no_picture_must_update_feature_properties(self):
+    def test_add_picture_on_viewpoint_with_no_picture_must_update_feature_properties(
+        self,
+    ):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['add_picture', ])
+        self._set_permissions(
+            [
+                "add_picture",
+            ]
+        )
 
         # should be equal to 0
         picture_count = self.viewpoint_without_picture.pictures.count()
 
         file = SimpleUploadedFile(
-            name='add_picture_test.jpg',
+            name="add_picture_test.jpg",
             content=open(
-                'terra_opp/tests/placeholder.jpg',
-                'rb',
+                "terra_opp/tests/placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         data = {
-            'viewpoint': self.viewpoint_without_picture.pk,
-            'date': timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
-            'file': file,
-            'state': settings.TROPP_STATES.ACCEPTED,
+            "viewpoint": self.viewpoint_without_picture.pk,
+            "date": timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
+            "file": file,
+            "state": settings.TROPP_STATES.ACCEPTED,
         }
         # this request must create a new picture on the viewpoint and update it's feature properties
         response = self.client.post(
-            reverse('terra_opp:picture-list'),
+            reverse("terra_opp:picture-list"),
             data,
             format="multipart",
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(self.viewpoint_without_picture.pictures.count(), picture_count + 1)
+        self.assertEqual(
+            self.viewpoint_without_picture.pictures.count(), picture_count + 1
+        )
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_without_picture.refresh_from_db()
         self.assertIn(
-            file.name.split('.')[0],
-            self.viewpoint_without_picture.point.properties['viewpoint_picture'],
+            file.name.split(".")[0],
+            self.viewpoint_without_picture.point.properties["viewpoint_picture"],
         )
 
     def test_update_picture_on_viewpoint_must_update_feature_properties(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['change_picture', ])
+        self._set_permissions(
+            [
+                "change_picture",
+            ]
+        )
 
         file = SimpleUploadedFile(
-            name='another_placeholder.jpg',
+            name="another_placeholder.jpg",
             content=open(
-                'terra_opp/tests/another_placeholder.jpg',
-                'rb',
+                "terra_opp/tests/another_placeholder.jpg",
+                "rb",
             ).read(),
-            content_type='image/jpeg',
+            content_type="image/jpeg",
         )
         data = {
-            'file': file,
+            "file": file,
         }
         # this request must create a new picture on the viewpoint and update it's feature properties
         response = self.client.patch(
-            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+            reverse(
+                "terra_opp:picture-detail",
+                args=[self.viewpoint_with_accepted_picture.pictures.latest().pk],
+            ),
             data,
-            format='multipart',
+            format="multipart",
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
         self.assertIn(
-            file.name.split('.')[0],
-            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+            file.name.split(".")[0],
+            self.viewpoint_with_accepted_picture.point.properties["viewpoint_picture"],
         )
 
     def test_delete_picture_on_viewpoint_must_update_feature_properties(self):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['delete_picture', ])
+        self._set_permissions(
+            [
+                "delete_picture",
+            ]
+        )
 
-        PictureFactory(viewpoint=self.viewpoint_with_accepted_picture, date=timezone.datetime(2020, 8, 20, tzinfo=timezone.utc))
+        PictureFactory(
+            viewpoint=self.viewpoint_with_accepted_picture,
+            date=timezone.datetime(2020, 8, 20, tzinfo=timezone.utc),
+        )
         picture_count = self.viewpoint_with_accepted_picture.pictures.count()
         before_last_picture = self.viewpoint_with_accepted_picture.pictures.all()[1]
 
         # this request must delete the picture on the viewpoint and update it's feature properties
         response = self.client.delete(
-            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+            reverse(
+                "terra_opp:picture-detail",
+                args=[self.viewpoint_with_accepted_picture.pictures.latest().pk],
+            ),
         )
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
-        self.assertEqual(self.viewpoint_with_accepted_picture.pictures.count(), picture_count - 1)
+        self.assertEqual(
+            self.viewpoint_with_accepted_picture.pictures.count(), picture_count - 1
+        )
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
         self.assertIn(
-            before_last_picture.file.name.split('.')[0],
-            self.viewpoint_with_accepted_picture.point.properties['viewpoint_picture'],
+            before_last_picture.file.name.split(".")[0],
+            self.viewpoint_with_accepted_picture.point.properties["viewpoint_picture"],
         )
 
-    def test_delete_the_only_available_picture_on_viewpoint_must_update_feature_properties(self):
+    def test_delete_the_only_available_picture_on_viewpoint_must_update_feature_properties(
+        self,
+    ):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(['delete_picture', ])
+        self._set_permissions(
+            [
+                "delete_picture",
+            ]
+        )
 
         # The viewpoint must only have a single available picture for this test
         self.assertEqual(1, self.viewpoint_with_accepted_picture.pictures.count())
 
         # This request must delete the only available picture on the viewpoint.
         response = self.client.delete(
-            reverse('terra_opp:picture-detail', args=[self.viewpoint_with_accepted_picture.pictures.latest().pk]),
+            reverse(
+                "terra_opp:picture-detail",
+                args=[self.viewpoint_with_accepted_picture.pictures.latest().pk],
+            ),
         )
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(0, self.viewpoint_with_accepted_picture.pictures.count())
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
-        self.assertFalse('viewpoint_picture' in self.viewpoint_with_accepted_picture.point.properties)
+        self.assertFalse(
+            "viewpoint_picture" in self.viewpoint_with_accepted_picture.point.properties
+        )
