@@ -74,6 +74,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
             "city",
             "themes",
             "identifier",
+            "active",
         )
         read_only_fields = ("identifier",)
 
@@ -193,6 +194,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             "city",
             "themes",
             "identifier",
+            "active",
         )
         read_only_fields = ("identifier",)
 
