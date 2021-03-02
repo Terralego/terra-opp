@@ -108,7 +108,7 @@ class Viewpoint(BaseLabelModel):
                 .get("identifier__max")
             )
             # aggregate return None if no value exists, i.e empty queryset
-            self.identifier = max_identifier + 1 if max_identifier is not None else 0
+            self.identifier = max_identifier + 1 if max_identifier is not None else 1
         super().save(*args, **kwargs)
 
 
