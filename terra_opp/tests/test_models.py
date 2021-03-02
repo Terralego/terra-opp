@@ -10,10 +10,10 @@ class ViewpointModelTestCase(TestCase):
         If viewpoint identifier is specified at creation, it should take this paremeter
         """
         viewpoint_1 = ViewpointFactory(label="First viewpoint")
-        self.assertEqual(viewpoint_1.identifier, 0)
+        self.assertEqual(viewpoint_1.identifier, 1)
 
         viewpoint_2 = ViewpointFactory(label="Second viewpoint")
-        self.assertEqual(viewpoint_2.identifier, 1)
+        self.assertEqual(viewpoint_2.identifier, 2)
 
         fix_identifier = 42
         viewpoint_3 = ViewpointFactory(
