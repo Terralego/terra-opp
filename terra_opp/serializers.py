@@ -149,10 +149,14 @@ class PhotographSerializer(serializers.ModelSerializer):
 class PictureSerializer(serializers.ModelSerializer):
     owner = PhotographSerializer(read_only=True)
     file = VersatileImageFieldSerializer("terra_opp")
+    viewpoint_identifier = serializers.SerializerMethodField()
 
     class Meta:
         model = Picture
         fields = "__all__"
+
+    def get_viewpoint_identifier(self, obj):
+        return obj.viewpoint.identifier
 
 
 class SimplePictureSerializer(PictureSerializer):
