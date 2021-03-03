@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
+from django.db.models import Max
 
 try:
     from django.db.models import JSONField
@@ -63,6 +64,7 @@ class Viewpoint(BaseLabelModel):
     )
     properties = JSONField(_("Properties"), default=dict, blank=True)
     related = GenericRelation("datastore.RelatedDocument")
+    identifier = models.PositiveIntegerField(_("Viewpoint number"), unique=True)
 
     objects = ViewpointsManager()
 
@@ -97,6 +99,17 @@ class Viewpoint(BaseLabelModel):
     class Meta:
         permissions = (("can_download_pdf", "Is able to download a pdf document"),)
         ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        if self.pk is None and not self.identifier:
+            max_identifier = (
+                Viewpoint.objects.all()
+                .aggregate(Max("identifier"))
+                .get("identifier__max")
+            )
+            # aggregate return None if no value exists, i.e empty queryset
+            self.identifier = max_identifier + 1 if max_identifier is not None else 1
+        super().save(*args, **kwargs)
 
 
 class Campaign(BaseLabelModel):
