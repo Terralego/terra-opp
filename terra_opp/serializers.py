@@ -73,9 +73,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
             "properties",
             "city",
             "themes",
-            "identifier",
         )
-        read_only_fields = ("identifier",)
 
     def get_status(self, obj):
         """
@@ -192,9 +190,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             "related",
             "city",
             "themes",
-            "identifier",
         )
-        read_only_fields = ("identifier",)
 
     def create(self, validated_data):
         related_docs = validated_data.pop("related", None)
