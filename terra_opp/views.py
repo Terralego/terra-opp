@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.core.cache import cache
-from django.db.models import Prefetch, Max
+from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
@@ -75,7 +75,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
     template_name = "terra_opp/viewpoint_pdf.html"
-    lookup_field = "identifier"
 
     def perform_create(self, serializer):
         serializer.save()
@@ -210,12 +209,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
                 "properties_set": properties_set,
             }
         )
-
-    @action(detail=False, methods=["get"])
-    def max_identifier(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        max_identifier = queryset.aggregate(Max("identifier"))
-        return Response(max_identifier)
 
 
 class CampaignViewSet(viewsets.ModelViewSet):

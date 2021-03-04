@@ -108,7 +108,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         response = self.client.get(
             reverse(
                 "terra_opp:viewpoint-detail",
-                args=[self.viewpoint_without_picture.identifier],
+                args=[self.viewpoint_without_picture.pk],
             )
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -398,7 +398,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
         # Update it
         response = self.client.patch(
-            reverse("terra_opp:viewpoint-detail", args=[data["identifier"]]),
+            reverse("terra_opp:viewpoint-detail", args=[data["id"]]),
             {
                 "related": [
                     {
@@ -417,7 +417,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def _viewpoint_delete(self):
         return self.client.delete(
-            reverse("terra_opp:viewpoint-detail", args=[self.viewpoint.identifier])
+            reverse("terra_opp:viewpoint-detail", args=[self.viewpoint.pk])
         )
 
     def test_viewpoint_delete_anonymous(self):
@@ -449,7 +449,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         return self.client.patch(
             reverse(
                 "terra_opp:viewpoint-detail",
-                args=[self.viewpoint_with_accepted_picture.identifier],
+                args=[self.viewpoint_with_accepted_picture.pk],
             ),
             {
                 "label": "test",
@@ -535,7 +535,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             reverse(
                 "terra_opp:viewpoint-detail",
                 args=[
-                    self.viewpoint_with_accepted_picture.identifier,
+                    self.viewpoint_with_accepted_picture.pk,
                 ],
             ),
             {"picture_ids": [picture.id]},
@@ -583,7 +583,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             reverse(
                 "terra_opp:viewpoint-detail",
                 args=[
-                    self.viewpoint_with_accepted_picture.identifier,
+                    self.viewpoint_with_accepted_picture.pk,
                 ],
             ),
             {"picture_ids": picture_ids},
@@ -636,7 +636,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         data = self.client.get(
             reverse(
                 "terra_opp:viewpoint-pdf",
-                args=[self.viewpoint.identifier],
+                args=[self.viewpoint.pk],
             )
         )
         self.assertEqual(status.HTTP_200_OK, data.status_code)
@@ -659,7 +659,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             reverse(
                 "terra_opp:viewpoint-zip-pictures",
                 args=[
-                    self.viewpoint_with_accepted_picture.identifier,
+                    self.viewpoint_with_accepted_picture.pk,
                 ],
             )
         )
