@@ -71,7 +71,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             ),
         ),
     ]
-    filter_fields = ["pictures", "active"]
+    filter_fields = ["pictures"]
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
     template_name = "terra_opp/viewpoint_pdf.html"
@@ -99,8 +99,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         return super().filter_queryset(queryset).order_by("-created_at")
 
     def get_queryset(self):
-        # unauthenticated user not allowed to access archived viewpoint
-        qs = Viewpoint.objects.with_accepted_pictures().filter(active=True)
+        qs = Viewpoint.objects.with_accepted_pictures()
         if self.request.user.is_authenticated:
             qs = Viewpoint.objects.all().distinct()
         pictures_qs = Picture.objects.order_by("-created_at")

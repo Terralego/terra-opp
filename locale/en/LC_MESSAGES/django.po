@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-03 12:52+0000\n"
+"POT-Creation-Date: 2021-02-17 15:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,43 +26,39 @@ msgstr ""
 msgid "Can manage pictures"
 msgstr ""
 
-#: terra_opp/models.py:19
+#: terra_opp/models.py:18
 msgid "Label"
 msgstr ""
 
-#: terra_opp/models.py:42
+#: terra_opp/models.py:41
 msgid "Cities"
 msgstr ""
 
-#: terra_opp/models.py:65 terra_opp/models.py:180
+#: terra_opp/models.py:64 terra_opp/models.py:167
 msgid "Properties"
 msgstr ""
 
-#: terra_opp/models.py:67
+#: terra_opp/models.py:66
 msgid "Viewpoint number"
 msgstr ""
 
-#: terra_opp/models.py:68
-msgid "Active"
-msgstr ""
-
-#: terra_opp/models.py:124 terra_opp/models.py:166
+#: terra_opp/models.py:111 terra_opp/models.py:153
 msgid "Owner"
 msgstr ""
 
-#: terra_opp/models.py:130
+#: terra_opp/models.py:117
 msgid "Assigned to"
 msgstr ""
 
-#: terra_opp/models.py:176
+#: terra_opp/models.py:163
 msgid "State"
 msgstr ""
 
-#: terra_opp/models.py:181
+#: terra_opp/models.py:168
 msgid "File"
 msgstr ""
 
-#: terra_opp/models.py:184
+#: terra_opp/models.py:171
 msgid "Date"
 msgstr ""
 
