@@ -73,6 +73,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
             "properties",
             "city",
             "themes",
+            "active",
         )
 
     def get_status(self, obj):
@@ -190,6 +191,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             "related",
             "city",
             "themes",
+            "active",
         )
 
     def create(self, validated_data):
