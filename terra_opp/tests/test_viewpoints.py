@@ -52,6 +52,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             os.path.join(os.path.dirname(__file__), "placeholder.jpg"),
             "rb",
         )
+
         self.data_create = {
             "label": "Basic viewpoint created",
             "point": self.feature.geom.json,
@@ -335,7 +336,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertIn(
-            "placeholder",
+            "viewpoint_10/2018-01-01_00-00-00",
             Viewpoint.objects.get(
                 label="Viewpoint created with picture"
             ).point.properties["viewpoint_picture"],
@@ -545,7 +546,10 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
         viewpoint = Viewpoint.objects.get(pk=self.viewpoint_with_accepted_picture.pk)
         self.assertEqual(1, viewpoint.pictures.count())
-        self.assertIn(file.name.split(".")[0], viewpoint.pictures.latest().file.name)
+        self.assertIn(
+            f"viewpoint_{self.viewpoint_with_accepted_picture.pk}/2019-01-01_00-00-00",
+            viewpoint.pictures.latest().file.name,
+        )
 
         feature = Feature.objects.get(pk=self.viewpoint_with_accepted_picture.point.pk)
         # Check if the feature has been updated after patching
@@ -706,7 +710,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
         self.assertIn(
-            file.name.split(".")[0],
+            f"viewpoint_{self.viewpoint_with_accepted_picture.pk}/2020-08-19_00-00-00",
             self.viewpoint_with_accepted_picture.point.properties["viewpoint_picture"],
         )
 
@@ -750,7 +754,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_without_picture.refresh_from_db()
         self.assertIn(
-            file.name.split(".")[0],
+            f"viewpoint_{self.viewpoint_without_picture.pk}/2020-08-19_00-00-00",
             self.viewpoint_without_picture.point.properties["viewpoint_picture"],
         )
 
@@ -786,7 +790,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Check if the feature has been updated after patching, so update the object from the DB before
         self.viewpoint_with_accepted_picture.refresh_from_db()
         self.assertIn(
-            file.name.split(".")[0],
+            f"viewpoint_{self.viewpoint_with_accepted_picture.pk}/2018-01-01_00-00-00",
             self.viewpoint_with_accepted_picture.point.properties["viewpoint_picture"],
         )
 
