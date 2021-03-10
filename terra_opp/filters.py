@@ -127,7 +127,7 @@ class ViewpointFilterSet(FilterSet):
 
     class Meta:
         model = Viewpoint
-        fields = ["city", "themes", "date_from", "date_to"]
+        fields = ["city", "themes", "date_from", "date_to", "active"]
 
 
 class SchemaAwareDjangoFilterBackend(DjangoFilterBackend):
