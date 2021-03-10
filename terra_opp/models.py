@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
+from pathlib import Path
+
 
 try:
     from django.db.models import JSONField
@@ -21,7 +23,7 @@ class BaseLabelModel(BaseUpdatableModel):
         abstract = True
 
     def __str__(self):
-        return self.label
+        return f"{self.label}"
 
 
 class ViewpointsManager(models.Manager):
@@ -150,6 +152,12 @@ class Campaign(BaseLabelModel):
         ordering = ["-created_at"]
 
 
+def image_upload_to(instance, filename):
+    date_str = instance.date.strftime("%Y-%m-%d_%H-%M-%S")
+    filename = Path(filename)
+    return f"pictures/viewpoint_{instance.viewpoint.id}/{date_str}{filename.suffix}"
+
+
 class Picture(BaseUpdatableModel):
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -169,7 +177,7 @@ class Picture(BaseUpdatableModel):
     )
 
     properties = JSONField(_("Properties"), default=dict, blank=True)
-    file = VersatileImageField(_("File"))
+    file = VersatileImageField(_("File"), upload_to=image_upload_to)
 
     # Different from created_at which is the upload date
     date = models.DateTimeField(_("Date"))

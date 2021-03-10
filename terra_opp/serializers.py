@@ -145,6 +145,12 @@ class PhotographSerializer(serializers.ModelSerializer):
 
 
 class PictureSerializer(serializers.ModelSerializer):
+    owner_id = serializers.PrimaryKeyRelatedField(
+        source="owner",
+        queryset=UserModel.objects.all(),
+        required=False,
+        many=False,
+    )
     owner = PhotographSerializer(read_only=True)
     file = VersatileImageFieldSerializer("terra_opp")
     identifier = serializers.IntegerField(read_only=True)
