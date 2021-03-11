@@ -25,6 +25,7 @@ from terra_opp.tests.factories import (
 from terra_opp.tests.mixins import TestPermissionsMixin
 
 
+@override_settings(OBSERVATORY_ID=20)
 class ViewpointTestCase(APITestCase, TestPermissionsMixin):
     @classmethod
     @override_settings(TROPP_PICTURES_STATES_WORKFLOW=True)

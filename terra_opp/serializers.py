@@ -147,6 +147,7 @@ class PhotographSerializer(serializers.ModelSerializer):
 class PictureSerializer(serializers.ModelSerializer):
     owner = PhotographSerializer(read_only=True)
     file = VersatileImageFieldSerializer("terra_opp")
+    identifier = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Picture
@@ -156,7 +157,7 @@ class PictureSerializer(serializers.ModelSerializer):
 class SimplePictureSerializer(PictureSerializer):
     class Meta:
         model = Picture
-        fields = ("id", "date", "file", "owner", "properties")
+        fields = ("id", "date", "file", "owner", "properties", "identifier")
 
 
 class ViewpointSerializerWithPicture(serializers.ModelSerializer):
