@@ -1,4 +1,9 @@
 
+0.5.2 / 2021-03-11
+==================
+
+  * Add active status on viewpoint
+
 0.5.1 / 2021-02-17
 ==================
 
@@ -38,7 +43,7 @@
 ==================
 
   * Warning ! Breaking changes
-    * Due to uniformity of storage usages, you need to use file:// schema in your template to access pictures 
+    * Due to uniformity of storage usages, you need to use file:// schema in your template to access pictures
     * Deprecate defining observatory layer by name.
     * Now you need to define layer pk instead -> TROPP_OBSERVATORY_LAYER_PK.
     * Existing frontend applications should be fixed by TROPP_OBSERVATORY_LAYER_PK=1
