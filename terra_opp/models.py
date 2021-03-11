@@ -91,6 +91,10 @@ class Viewpoint(BaseLabelModel):
             return self.pictures.order_by("-created_at")
 
     @property
+    def ordered_pics_by_date(self):
+        return self.pictures.order_by("date")
+
+    @property
     def picture(self):
         pics = self.ordered_pics
         return pics[0].file if pics else None
@@ -185,3 +189,12 @@ class Picture(BaseUpdatableModel):
         if not settings.TROPP_PICTURES_STATES_WORKFLOW:
             self.state = settings.TROPP_STATES.ACCEPTED
         super().save(*args, **kwargs)
+
+    @property
+    def identifier(self):
+        obs_id = settings.OBSERVATORY_ID
+        pic_index = list(
+            self.viewpoint.ordered_pics_by_date.values_list("id", flat=True)
+        ).index(self.id)
+        pic_index += 1  # list index start at 0, picture order start at 1
+        return int(f"{obs_id}0{self.viewpoint.id:03}{pic_index:02}")
