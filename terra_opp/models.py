@@ -200,7 +200,7 @@ class Picture(BaseUpdatableModel):
 
     @property
     def identifier(self):
-        obs_id = settings.OBSERVATORY_ID
+        obs_id = settings.TROPP_OBSERVATORY_ID
         pic_index = list(
             self.viewpoint.ordered_pics_by_date.values_list("id", flat=True)
         ).index(self.id)
