@@ -6,7 +6,7 @@ Terralego Backend for OPP module
 
 ### Requirements
 
-* To handle pictures in templates, please install weasyprint requirement librairies 
+* To handle pictures in templates, please install weasyprint requirement librairies
 https://weasyprint.readthedocs.io/en/stable/install.html#linux
 
 ### First, create a data layer for observatory
@@ -21,6 +21,8 @@ Then get the given primary key, for example 10.
 
 ```python
 TROPP_OBSERVATORY_LAYER_PK=10  # replace by primary key given by command
+
+TROPP_OBSERVATORY_ID = 20 # set the nationnal id of your observatory
 
 VERSATILEIMAGEFIELD_RENDITION_KEY_SETS = {
   'terra_opp': [
@@ -39,7 +41,7 @@ AUTH_USER_MODEL = 'terra_accounts.TerraUser'
 If your project is not using the default django storage, then you must define and set a url fetcher in order to tell weasyprint where to find your media files.
 
 An example of url fetcher using media files from S3 storage :
- 
+
  ```python
 from django.conf import settings
 from terra_opp.renderers import django_url_fetcher

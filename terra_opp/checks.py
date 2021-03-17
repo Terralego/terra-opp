@@ -45,6 +45,25 @@ def check_dedicated_layer(app_configs, **kwargs):
 
 
 @register()
+def check_opp_id_defined(app_configs, **kwargs):
+    errors = []
+    tropp_observatory_id = settings.TROPP_OBSERVATORY_ID
+    if not tropp_observatory_id:
+        errors.append(
+            Warning(
+                "To correctly use OPP you should set TROPP_OBSERVATORY_ID and restart your instance as soon as possible.",
+                hint="""
+                    TROPP_OBSERVATORY_ID is the identifier of your observatory at national level
+                    Ex: TROPP_OBSERVATORY_ID = 20
+                """,
+                obj=None,
+                id="terra_opp.E004",
+            )
+        )
+    return errors
+
+
+@register()
 def check_installed_apps(app_configs, **kwargs):
     errors = []
     if "versatileimagefield" not in settings.INSTALLED_APPS:
