@@ -1,4 +1,10 @@
 
+0.5.3 / 2021-03-17
+==================
+
+  * Add owner_id to picture to be to modify it
+  * Add business identifier for picture
+
 0.5.2 / 2021-03-11
 ==================
 
