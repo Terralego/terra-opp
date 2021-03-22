@@ -1,15 +1,4 @@
-from terra_opp.helpers import Choices
-
 TROPP_URL_FETCHER = "terra_opp.renderers.django_url_fetcher"
-
-TROPP_STATES = Choices(
-    ("DRAFT", 100, "Draft"),
-    ("SUBMITTED", 200, "Submitted"),
-    ("ACCEPTED", 300, "Accepted"),
-    ("REFUSED", -1, "Refused"),
-    ("CANCELLED", -100, "Cancelled"),
-    ("MISSING", 0, "Missing"),
-)
 
 TROPP_PICTURES_STATES_WORKFLOW = False
 

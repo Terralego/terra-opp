@@ -6,8 +6,13 @@ class TestPermissionsMixin:
         self.user.user_permissions.clear()
         self._clean_perm_cache()
 
-    def _set_permissions(self, perms):
-        self.user.user_permissions.add(*Permission.objects.filter(codename__in=perms))
+    def _set_permissions(self, perms, user=None):
+        if user is None:
+            self.user.user_permissions.add(
+                *Permission.objects.filter(codename__in=perms)
+            )
+        else:
+            user.user_permissions.add(*Permission.objects.filter(codename__in=perms))
         self._clean_perm_cache()
 
     def _clean_perm_cache(self):

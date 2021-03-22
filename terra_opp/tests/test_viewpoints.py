@@ -3,7 +3,6 @@ import os
 from datetime import timedelta
 from unittest.mock import patch
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile, UploadedFile
 from django.test import override_settings
@@ -37,7 +36,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         # Create viewpoint with accepted picture attached to it
         cls.viewpoint_with_accepted_picture = ViewpointFactory(
             label="Viewpoint with accepted picture",
-            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            pictures__state="accepted",
             properties={"test_update": "ko"},
         )
         # Create viewpoints with no picture attached to it
@@ -58,6 +57,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             "point": self.feature.geom.json,
             "city": "Nantes",
         }
+
         self.data_create_with_picture = {
             "label": "Viewpoint created with picture",
             "point": self.feature.geom.json,
@@ -67,6 +67,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             ],
             "city": "Nantes",
         }
+
         self.data_create_with_themes = {
             "label": "Viewpoint created with themes",
             "point": self.feature.geom.json,
@@ -77,6 +78,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
     def tearDown(self):
         self.fp.close()
+
+    def _viewpoint_create(self):
+        return self.client.post(
+            reverse("terra_opp:viewpoint-list"),
+            self.data_create,
+        )
+
+    def _viewpoint_create_with_picture(self):
+        return self.client.post(
+            reverse("terra_opp:viewpoint-list"),
+            self.data_create_with_picture,
+            format="multipart",
+        )
 
     def test_viewpoint_get_list_anonymous(self):
         with self.assertNumQueries(6):
@@ -227,7 +241,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         list_url = reverse("terra_opp:viewpoint-list")
         ViewpointFactory(
             label="Viewpoint for search",
-            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            pictures__state="accepted",
             properties={
                 "voie": "coin d'en bas de la rue du bout",
                 "site": "Carrière des petits violoncelles",
@@ -244,7 +258,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         city = CityFactory(label="Rouperou-le-coquet")
         ViewpointFactory(
             label="Viewpoint for search",
-            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            pictures__state="accepted",
             city=city,
         )
         self.assertEqual(self.client.get(list_url).json()["count"], 2)
@@ -258,7 +272,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         theme_baz = ThemeFactory(label="baz")
         vp = ViewpointFactory(
             label="Viewpoint for search",
-            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            pictures__state="accepted",
             properties={
                 "voie": "coin d'en bas de la rue du bout",
                 "site": "Carrière des petits violoncelles",
@@ -272,12 +286,6 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertEqual(data.get("count"), 1)
         data = self.client.get(list_url, {"themes": ["bar", "foobar"]}).json()
         self.assertEqual(data.get("count"), 0)
-
-    def _viewpoint_create(self):
-        return self.client.post(
-            reverse("terra_opp:viewpoint-list"),
-            self.data_create,
-        )
 
     def test_viewpoint_create_anonymous(self):
         response = self._viewpoint_create()
@@ -297,19 +305,12 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "add_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
         response = self._viewpoint_create()
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-
-    def _viewpoint_create_with_picture(self):
-        return self.client.post(
-            reverse("terra_opp:viewpoint-list"),
-            self.data_create_with_picture,
-            format="multipart",
-        )
 
     def test_viewpoint_create_with_picture_anonymous(self):
         response = self._viewpoint_create_with_picture()
@@ -329,24 +330,24 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "add_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
         response = self._viewpoint_create_with_picture()
+
         # Request is correctly constructed and viewpoint has been created
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        viewpoint = Viewpoint.objects.get(label="Viewpoint created with picture")
         self.assertIn(
-            "viewpoint_10/2018-01-01_00-00-00",
-            Viewpoint.objects.get(
-                label="Viewpoint created with picture"
-            ).point.properties["viewpoint_picture"],
+            "/2018-01-01_00-00-00",
+            viewpoint.point.properties["viewpoint_picture"],
         )
 
     def test_viewpoint_create_with_themes_with_auth_and_perms(self):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "add_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
         response = self.client.post(
@@ -367,7 +368,11 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
     @patch("datastore.fields.FileBase64Field.to_internal_value")
     def test_viewpoint_create_with_related_docs(self, field):
         self.client.force_authenticate(user=self.user)
-        self._set_permissions(["add_viewpoint", "change_viewpoint"])
+        self._set_permissions(
+            [
+                "can_manage_viewpoints",
+            ]
+        )
         self.fp.seek(0)
         document = (
             f"data:image/jpg;base64,"
@@ -440,7 +445,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "delete_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
         response = self._viewpoint_delete()
@@ -480,7 +485,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "change_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
 
@@ -512,7 +517,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "change_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
 
@@ -531,7 +536,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             owner=self.user,
             date=date,
             file=file,
-            state=settings.TROPP_STATES.ACCEPTED,
+            state="accepted",
         )
         response = self.client.patch(
             reverse(
@@ -559,7 +564,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "change_viewpoint",
+                "can_manage_viewpoints",
             ]
         )
 
@@ -578,7 +583,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             owner=self.user,
             date=date,
             file=file,
-            state=settings.TROPP_STATES.ACCEPTED,
+            state="accepted",
         )
         picture_ids = [
             pic.id for pic in self.viewpoint_with_accepted_picture.pictures.all()
@@ -629,7 +634,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             owner=self.user,
             date=date,
             file=file,
-            state=settings.TROPP_STATES.ACCEPTED,
+            state="accepted",
         )
 
         # Viewpoint should appears only once in the list
@@ -676,7 +681,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "add_picture",
+                "can_manage_pictures",
             ]
         )
 
@@ -695,7 +700,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             "viewpoint": self.viewpoint_with_accepted_picture.pk,
             "date": timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
             "file": file,
-            "state": settings.TROPP_STATES.ACCEPTED,
+            "state": "accepted",
         }
         # this request must create a new picture on the viewpoint and update it's feature properties
         response = self.client.post(
@@ -720,7 +725,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "add_picture",
+                "can_manage_pictures",
             ]
         )
 
@@ -739,7 +744,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             "viewpoint": self.viewpoint_without_picture.pk,
             "date": timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
             "file": file,
-            "state": settings.TROPP_STATES.ACCEPTED,
+            "state": "accepted",
         }
         # this request must create a new picture on the viewpoint and update it's feature properties
         response = self.client.post(
@@ -762,7 +767,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "change_picture",
+                "can_manage_pictures",
             ]
         )
 
@@ -798,7 +803,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "delete_picture",
+                "can_manage_pictures",
             ]
         )
 
@@ -833,7 +838,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         self._set_permissions(
             [
-                "delete_picture",
+                "can_manage_pictures",
             ]
         )
 
@@ -856,8 +861,16 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         )
 
     def test_only_active_viewpoint_retrieve(self):
-        active_viewpoint = ViewpointFactory(label="Active viewpoint", active=True)
-        ViewpointFactory(label="Unactive viewpoint", active=False)
+        active_viewpoint = ViewpointFactory(
+            label="Active viewpoint",
+            active=True,
+            pictures__state="accepted",
+        )
+        inactive_viewpoint = ViewpointFactory(
+            label="Unactive viewpoint",
+            active=False,
+            pictures__state="accepted",
+        )
         response = self.client.get(reverse("terra_opp:viewpoint-active"))
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 
@@ -865,5 +878,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             Viewpoint.objects.with_accepted_pictures().filter(active=True).count()
         )
         data = response.json()
+
         self.assertEqual(active_viewpoint_count, data["count"])
-        self.assertEqual(active_viewpoint.id, data["results"][0]["id"])
+        self.assertNotIn(inactive_viewpoint.id, [d["id"] for d in data["results"]])
+        self.assertIn(active_viewpoint.id, [d["id"] for d in data["results"]])
