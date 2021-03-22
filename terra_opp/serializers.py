@@ -1,11 +1,12 @@
 from typing import Optional
 
 from django.conf import settings
+from django.db import transaction
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from geostore import GeometryTypes
 from geostore.models import Feature, Layer
-from rest_framework import serializers
+from rest_framework import serializers, fields
 from rest_framework_gis.fields import GeometryField
 from datastore.models import RelatedDocument
 from datastore.serializers import RelatedDocumentUrlSerializer
@@ -51,7 +52,6 @@ class ThemeLabelSlugRelatedField(LabelSlugRelatedField):
 
 
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
-    status = serializers.SerializerMethodField()
     city = CityLabelSlugRelatedField(
         slug_field="label",
         queryset=City.objects.all(),
@@ -69,69 +69,44 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
             "label",
             "picture",
             "point",
-            "status",
             "properties",
             "city",
             "themes",
             "active",
         )
 
-    def get_status(self, obj):
-        """
-        :return: string (missing, draft, submitted, accepted)
-        """
-        # Get only pictures created for the campaign
-        STATES = settings.TROPP_STATES
-        try:
-            last_pic = obj.ordered_pics[0]
-            if last_pic.created_at < obj.created_at:
-                return STATES.CHOICES_DICT[STATES.MISSING]
-            return STATES.CHOICES_DICT[last_pic.state]
-        except IndexError:
-            return STATES.CHOICES_DICT[STATES.MISSING]
-
 
 class CampaignSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.email")
+    start_date = fields.DateField(input_formats=["%Y-%m-%d"])
+    viewpoints_count = serializers.IntegerField(read_only=True)
+    owner = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    # Override to expose typed data
+    statistics = serializers.DictField(
+        child=serializers.IntegerField(),
+        read_only=True,
+    )
 
     class Meta:
         model = Campaign
         fields = "__all__"
 
 
-class DetailCampaignNestedSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.email")
-    viewpoints = SimpleViewpointSerializer(many=True, read_only=True)
-
-    class Meta(CampaignSerializer.Meta):
-        model = Campaign
-        fields = "__all__"
-
-
-class DetailAuthenticatedCampaignNestedSerializer(serializers.ModelSerializer):
-    owner = serializers.ReadOnlyField(source="owner.email")
-    viewpoints = SimpleAuthenticatedViewpointSerializer(many=True, read_only=True)
-
-    class Meta(CampaignSerializer.Meta):
-        model = Campaign
-        fields = "__all__"
-
-
 class ListCampaignNestedSerializer(CampaignSerializer):
-    picture = PermissiveImageFieldSerializer(
-        "terra_opp",
-        source="viewpoints.first.pictures.first.file",
-    )
-    # Override to expose typed data
-    statistics = serializers.DictField(
-        child=serializers.IntegerField(),
-        read_only=True,
-    )
+
     status = serializers.BooleanField(read_only=True)
 
     class Meta(CampaignSerializer.Meta):
         model = Campaign
-        fields = ("label", "assignee", "picture", "statistics", "status")
+        fields = (
+            "id",
+            "label",
+            "start_date",
+            "assignee",
+            "statistics",
+            "status",
+            "state",
+            "viewpoints_count",
+        )
 
 
 class PhotographSerializer(serializers.ModelSerializer):
@@ -201,9 +176,12 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             "active",
         )
 
+    @transaction.atomic
     def create(self, validated_data):
         related_docs = validated_data.pop("related", None)
         point_data = validated_data.pop("point", None)
+
+        # Get or create layer
         layer, created = Layer.objects.get_or_create(
             pk=settings.TROPP_OBSERVATORY_LAYER_PK,
             defaults={
@@ -211,6 +189,8 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
                 "id": settings.TROPP_OBSERVATORY_LAYER_PK,
             },
         )
+
+        # Create feature
         feature = Feature.objects.create(
             geom=point_data.get("geom"),
             layer_id=settings.TROPP_OBSERVATORY_LAYER_PK,
@@ -218,6 +198,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         )
         validated_data.setdefault("point", feature)
 
+        # Get or create city
         city_label = validated_data.pop("city", None)
         city, created = City.objects.get_or_create(
             label=city_label,
@@ -227,6 +208,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         )
         validated_data.setdefault("city", city)
 
+        # Handle themes
         themes_labels = validated_data.pop("themes", None)
         if themes_labels:
             theme_list = []
@@ -241,9 +223,13 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             validated_data.setdefault("themes", theme_list)
 
         instance = super().create(validated_data)
+
+        # Handle related docs
         self.handle_related_documents(instance, related_docs)
+
         return instance
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         point_data = validated_data.pop("point", None)
         if point_data:

@@ -12,6 +12,8 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
     permissions = (
         ("OPP", "can_manage_viewpoints", _("Can manage viewpoints")),
         ("OPP", "can_manage_pictures", _("Can manage pictures")),
+        ("OPP", "can_add_pictures", _("Can add pictures")),
+        ("OPP", "can_manage_campaigns", _("Can manage campaign")),
     )
 
     def ready(self):

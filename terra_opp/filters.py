@@ -4,14 +4,13 @@ import coreapi
 import coreschema
 from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
-from django.db.models import Q
 from django_filters import FilterSet
 from django_filters.rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import BaseFilterBackend
 from url_filter.integrations.drf import DjangoFilterBackend
 
-from .models import Viewpoint
+from .models import Viewpoint, Picture, Campaign
 
 
 class CampaignFilterBackend(BaseFilterBackend):
@@ -21,12 +20,6 @@ class CampaignFilterBackend(BaseFilterBackend):
 
     def get_schema_fields(self, view):
         super().get_schema_fields(view)
-        choices = {
-            settings.TROPP_STATES.DRAFT: "Incomplete metadata",
-            settings.TROPP_STATES.SUBMITTED: "Pending validation",
-            settings.TROPP_STATES.REFUSED: "Refused",
-            settings.TROPP_STATES.ACCEPTED: "Validated",
-        }
         return [
             coreapi.Field(
                 name="status",
@@ -38,37 +31,30 @@ class CampaignFilterBackend(BaseFilterBackend):
                 ),
             ),
             coreapi.Field(
-                name="picture_status",
+                name="picture_state",
                 required=False,
                 location="query",
                 schema=coreschema.Enum(
-                    choices,
-                    description=str(pformat(choices)),
+                    Picture.STATES,
+                    description=str(pformat(Picture.STATES)),
                     title="Picture status",
                 ),
             ),
         ]
 
     def filter_queryset(self, request, queryset, view):
-        STATES = settings.TROPP_STATES
         status = request.GET.get("status", None)
         if status is not None:
             try:
-                status = bool(int(status))
+                assert status in [s[0] for s in Campaign.STATES]
             except ValueError:
                 raise ValidationError
-            if status:
-                queryset = queryset.filter(viewpoints__pictures__state=STATES.ACCEPTED)
-            else:
-                queryset = queryset.exclude(
-                    Q(viewpoints__pictures__state=STATES.ACCEPTED)
-                )
+            queryset = queryset.filter(state=status)
 
         picture_status = request.GET.get("picture_status", None)
         if picture_status is not None:
             try:
-                picture_status = int(picture_status)
-                assert picture_status in STATES.CHOICES_DICT
+                assert picture_status in [s[0] for s in Picture.STATES]
             except (AssertionError, ValueError):
                 raise ValidationError
             queryset = queryset.filter(viewpoints__pictures__state=picture_status)
@@ -128,6 +114,14 @@ class ViewpointFilterSet(FilterSet):
     class Meta:
         model = Viewpoint
         fields = ["city", "themes", "date_from", "date_to", "active"]
+
+
+class PictureFilterSet(FilterSet):
+    # owner_id = filters.IntegerFilter(field_name="owner", lookup_expr="exact")
+
+    class Meta:
+        model = Picture
+        fields = ["owner"]
 
 
 class SchemaAwareDjangoFilterBackend(DjangoFilterBackend):

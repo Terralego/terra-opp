@@ -3,17 +3,18 @@ from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.gis.db import models
 from pathlib import Path
 
-
 try:
     from django.db.models import JSONField
 except ImportError:  # TODO Remove when dropping Django releases < 3.1
     from django.contrib.postgres.fields import JSONField
+
 from django.utils.translation import ugettext_lazy as _
 from versatileimagefield.fields import VersatileImageField
 
 from terra_settings.mixins import BaseUpdatableModel
 from geostore.models import Feature
-from .settings import TROPP_STATES as DEFAULT_TROPP_STATES
+
+# from django.db.models import Count
 
 
 class BaseLabelModel(BaseUpdatableModel):
@@ -32,7 +33,7 @@ class ViewpointsManager(models.Manager):
             super()
             .get_queryset()
             .filter(
-                pictures__state=settings.TROPP_STATES.ACCEPTED,
+                pictures__state="accepted",
             )
             .distinct()
         )
@@ -70,20 +71,6 @@ class Viewpoint(BaseLabelModel):
     objects = ViewpointsManager()
 
     @property
-    def status(self):
-        """
-        Return the status of this viewpoint for a campaign
-        :param self:
-        :return: string (missing, draft, submitted, accepted)
-        """
-        # Get only pictures created for the campaign
-        picture = self.pictures.latest()
-        STATES = settings.TROPP_STATES
-        if picture.created_at < self.created_at:
-            return STATES.CHOICES_DICT[STATES.MISSING]
-        return STATES.CHOICES_DICT[picture.state]
-
-    @property
     def ordered_pics(self):
         if hasattr(self, "_ordered_pics"):
             # if _ordered_pics set by prefetch on qs, get it
@@ -107,6 +94,13 @@ class Viewpoint(BaseLabelModel):
 
 
 class Campaign(BaseLabelModel):
+    STATES = (
+        ("draft", _("Draft")),
+        ("started", _("Started")),
+        ("closed", _("Closed")),
+    )
+
+    start_date = models.DateField(_("Start date"))
     viewpoints = models.ManyToManyField(
         Viewpoint,
         related_name="campaigns",
@@ -123,33 +117,50 @@ class Campaign(BaseLabelModel):
         verbose_name=_("Assigned to"),
         related_name="assigned_campaigns",
     )
+    state = models.CharField(_("State"), default="draft", max_length=10, choices=STATES)
 
     @property
     def statistics(self):
+        return {"total": self.viewpoints.count()}
+
+        # Kept for later
+        """queryset = self.objects.aggregate(total=Count("viewpoints")).values("total")
+
+        # TODO add campaign start date filter
         queryset = self.viewpoints.annotate(
-            missing=models.Count("pk", filter=models.Q(pictures__isnull=True)),
+            total=models.Count("pk"),
+            missing=models.Count(
+                "pictures", filter=models.Q(pictures__date__gte=self.start_date)
+            ),
             pending=models.Count(
-                "pictures", filter=models.Q(pictures__state=settings.TROPP_STATES.DRAFT)
-            ),
-            refused=models.Count(
                 "pictures",
-                filter=models.Q(pictures__state=settings.TROPP_STATES.REFUSED),
+                filter=models.Q(
+                    pictures__state=settings.TROPP_STATES.DRAFT,
+                    pictures__date__gte=self.start_date,
+                ),
             ),
-        ).values("missing", "pending", "refused")
+            accepted=models.Count(
+                "pictures",
+                filter=models.Q(
+                    pictures__state=settings.TROPP_STATES.ACCEPTED,
+                    pictures__date__gte=self.start_date,
+                ),
+            ),
+        ).values("total", "missing", "pending", "accepted")
         try:
             return queryset[0]
         except IndexError:
-            return {"missing": 0, "pending": 0, "refused": 0}
+            return {"total": 0, "missing": 0, "accepted": 0, "pending": 0}"""
 
     @property
     def status(self):
+        # TODO Handle missing photo
         return not self.viewpoints.exclude(
-            pictures__state=settings.TROPP_STATES.ACCEPTED,
+            pictures__state="accepted",
         ).exists()
 
     class Meta:
-        permissions = (("manage_all_campaigns", "Can manage all campaigns"),)
-        ordering = ["-created_at"]
+        ordering = ["-start_date", "-created_at"]
 
 
 def image_upload_to(instance, filename):
@@ -159,6 +170,13 @@ def image_upload_to(instance, filename):
 
 
 class Picture(BaseUpdatableModel):
+    STATES = (
+        ("draft", _("Draft")),
+        ("submited", _("Submited")),
+        ("accepted", _("Accepted")),
+        ("refused", _("Refused")),
+    )
+
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,
@@ -170,11 +188,8 @@ class Picture(BaseUpdatableModel):
         on_delete=models.CASCADE,
         related_name="pictures",
     )
-    # States may be : draft, metadata_ok (submitted), accepted, refused
-    state = models.IntegerField(
-        _("State"),
-        default=getattr(settings, "TROPP_STATES", DEFAULT_TROPP_STATES).DRAFT,
-    )
+    # States may be : draft, submitted, accepted, refused
+    state = models.CharField(_("State"), default="draft", choices=STATES, max_length=10)
 
     properties = JSONField(_("Properties"), default=dict, blank=True)
     file = VersatileImageField(_("File"), upload_to=image_upload_to)
@@ -194,8 +209,6 @@ class Picture(BaseUpdatableModel):
         ordering = ["-date"]
 
     def save(self, *args, **kwargs):
-        if not settings.TROPP_PICTURES_STATES_WORKFLOW:
-            self.state = settings.TROPP_STATES.ACCEPTED
         super().save(*args, **kwargs)
 
     @property

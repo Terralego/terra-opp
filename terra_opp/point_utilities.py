@@ -49,6 +49,7 @@ def change_point_thumbnail(picture: Picture, context):
     :return:
     """
     """ Change the picture's point thumbnail """
+
     terra_opp_versatile_serializer = VersatileImageFieldSerializer("terra_opp")
     terra_opp_versatile_serializer._context = context
     last_picture_sizes = terra_opp_versatile_serializer.to_representation(picture.file)

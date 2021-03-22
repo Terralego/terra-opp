@@ -8,6 +8,7 @@ from terra_opp.models import Campaign, City, Picture, Theme, Viewpoint
 class CampaignFactory(factory.django.DjangoModelFactory):
     owner = factory.SubFactory("terra_accounts.tests.factories.TerraUserFactory")
     assignee = factory.SubFactory("terra_accounts.tests.factories.TerraUserFactory")
+    start_date = timezone.datetime(2018, 1, 1, tzinfo=timezone.utc)
 
     class Meta:
         model = Campaign

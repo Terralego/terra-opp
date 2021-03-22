@@ -11,7 +11,7 @@ from django.db.models import Prefetch
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -21,15 +21,16 @@ from .filters import (
     JsonFilterBackend,
     ViewpointFilterSet,
     SchemaAwareDjangoFilterBackend,
+    PictureFilterSet,
 )
 from .models import Campaign, City, Picture, Theme, Viewpoint
 from .pagination import RestPageNumberPagination
 from .point_utilities import remove_point_thumbnail, update_point_properties
 from .renderers import PdfRenderer, ZipRenderer
+from . import permissions
+
 from .serializers import (
     CampaignSerializer,
-    DetailAuthenticatedCampaignNestedSerializer,
-    DetailCampaignNestedSerializer,
     ListCampaignNestedSerializer,
     PictureSerializer,
     SimpleAuthenticatedViewpointSerializer,
@@ -38,11 +39,13 @@ from .serializers import (
     PhotographSerializer,
 )
 
+from django.db.models import Count
+
 
 class ViewpointViewSet(viewsets.ModelViewSet):
     serializer_class = ViewpointSerializerWithPicture
     permission_classes = [
-        permissions.DjangoModelPermissionsOrAnonReadOnly,
+        permissions.ViewpointPermission,
     ]
     filter_backends = (
         SearchFilter,
@@ -188,7 +191,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         qs = (
             self.get_object()
             .pictures.filter(
-                state__gte=settings.TROPP_STATES.ACCEPTED,
+                state="accepted",
             )
             .only("file")
         )
@@ -226,12 +229,20 @@ class ViewpointViewSet(viewsets.ModelViewSet):
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
-    queryset = Campaign.objects.all()
-    permission_classes = [permissions.DjangoModelPermissions]
+    queryset = Campaign.objects.all().annotate(viewpoints_count=Count("viewpoints"))
+    permission_classes = [
+        permissions.CampaignPermission,
+    ]
     http_method_names = ["get", "post", "put", "delete", "options"]
     filter_backends = (CampaignFilterBackend, SearchFilter)
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
+
+    def filter_queryset(self, queryset):
+        # We must reorder the queryset here because initial filtering in
+        # viewpoint model is not done right see
+        # https://github.com/encode/django-rest-framework/issues/1717
+        return super().filter_queryset(queryset).order_by("-start_date", "-created_at")
 
     def get_queryset(self):
         # Filter only on assigned campaigns for photographs
@@ -246,45 +257,57 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 )
             )
         )
-        if self.action == "list" and not user.has_perm(
-            "terra_opp.manage_all_campaigns"
-        ):
-            return qs.filter(assignee=user)
+        if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
+            return qs.filter(assignee=user, state__in=["started", "closed"])
         return qs
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
-    def check_object_permissions(self, request, obj: Campaign):
-        # Prevent acting on unassigned campaigns for photographs
-        has_perm = request.user.has_perm("terra_opp.manage_all_campaigns")
-        if not has_perm and obj.assignee != request.user:
-            self.permission_denied(request)
-        super().check_object_permissions(request, obj)
-
     def get_serializer_class(self):
         if self.action == "list":
             return ListCampaignNestedSerializer
-        if self.action == "retrieve":
-            if self.request.user.is_anonymous:
-                return DetailCampaignNestedSerializer
-            return DetailAuthenticatedCampaignNestedSerializer
         return CampaignSerializer
 
 
 class PictureViewSet(viewsets.ModelViewSet):
     queryset = Picture.objects.all()
     serializer_class = PictureSerializer
-    permission_classes = [permissions.DjangoModelPermissions]
+    permission_classes = [
+        permissions.PicturePermission,
+    ]
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = PictureFilterSet
     pagination_class = RestPageNumberPagination
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-        update_point_properties(serializer.instance.viewpoint, self.request)
+        if self.request.user.has_terra_perm("can_manage_pictures"):
+            state = "accepted"
+            owner = serializer.validated_data.get("owner")
+            if not owner:
+                owner = self.request.user
+            serializer.save(state=state, owner=owner)
+            update_point_properties(serializer.instance.viewpoint, self.request)
+
+        elif self.request.user.has_terra_perm("can_add_pictures"):
+            serializer.save(owner=self.request.user)
+            update_point_properties(serializer.instance.viewpoint, self.request)
 
     def perform_update(self, serializer):
-        serializer.save()
-        update_point_properties(serializer.instance.viewpoint, self.request)
+        if self.request.user.has_terra_perm("can_manage_pictures"):
+            serializer.save()
+            update_point_properties(serializer.instance.viewpoint, self.request)
+
+        elif self.request.user.has_terra_perm("can_add_pictures"):
+            new_state = serializer.validated_data["state"]
+            if new_state not in [
+                "draft",
+                "submited",
+            ]:
+                new_state = "draft"
+            # For self as user and draft state
+            serializer.save(owner=self.request.user, state=new_state)
+            update_point_properties(serializer.instance.viewpoint, self.request)
 
     def perform_destroy(self, instance):
         remove_point_thumbnail(instance, self.request)
