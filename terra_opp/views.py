@@ -211,6 +211,19 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             }
         )
 
+    @action(detail=False, methods=["get"])
+    def active(self, request, *args, **kwargs):
+        qs = self.get_queryset().filter(active=True)
+        qs_filtered = self.filter_queryset(qs)
+        page = self.paginate_queryset(qs_filtered)
+
+        if page is not None:
+            serializer = SimpleViewpointSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = SimpleViewpointSerializer(qs_filtered, many=True)
+        return Response(serializer.data)
+
 
 class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.all()
