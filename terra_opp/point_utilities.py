@@ -19,6 +19,7 @@ def update_point_properties(viewpoint: Viewpoint, request: HttpRequest):
         "viewpoint_id": viewpoint.id,
         "viewpoint_label": viewpoint.label,
         "viewpoint_city": viewpoint.city.label if viewpoint.city else "",
+        "viewpoint_active": viewpoint.active,
     }
     # Merging the properties bellow in the ones already present in the point
     point.properties = {**point.properties, **properties}

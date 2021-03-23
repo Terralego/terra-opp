@@ -854,3 +854,16 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.assertFalse(
             "viewpoint_picture" in self.viewpoint_with_accepted_picture.point.properties
         )
+
+    def test_only_active_viewpoint_retrieve(self):
+        active_viewpoint = ViewpointFactory(label="Active viewpoint", active=True)
+        ViewpointFactory(label="Unactive viewpoint", active=False)
+        response = self.client.get(reverse("terra_opp:viewpoint-active"))
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        active_viewpoint_count = (
+            Viewpoint.objects.with_accepted_pictures().filter(active=True).count()
+        )
+        data = response.json()
+        self.assertEqual(active_viewpoint_count, data["count"])
+        self.assertEqual(active_viewpoint.id, data["results"][0]["id"])
