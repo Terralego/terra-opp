@@ -36,4 +36,4 @@ TROPP_SEARCHABLE_PROPERTIES = {
 
 # Create a geostore layer and provide its Primary Key here
 TROPP_OBSERVATORY_LAYER_PK = None
-OBSERVATORY_ID = None
+TROPP_OBSERVATORY_ID = None
