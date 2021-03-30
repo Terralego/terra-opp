@@ -6,7 +6,7 @@ Terralego Backend for OPP module
 
 ### Requirements
 
-* To handle pictures in templates, please install weasyprint requirement librairies 
+* To handle pictures in templates, please install weasyprint requirement librairies
 https://weasyprint.readthedocs.io/en/stable/install.html#linux
 
 ### First, create a data layer for observatory
@@ -39,7 +39,7 @@ AUTH_USER_MODEL = 'terra_accounts.TerraUser'
 If your project is not using the default django storage, then you must define and set a url fetcher in order to tell weasyprint where to find your media files.
 
 An example of url fetcher using media files from S3 storage :
- 
+
  ```python
 from django.conf import settings
 from terra_opp.renderers import django_url_fetcher
@@ -95,3 +95,18 @@ To run test suite, just launch:
 ```sh
 docker-compose exec web /code/venv/bin/python3 /code/src/manage.py test
 ```
+
+## Releasing a new version
+```sh
+# on the master branch
+# update the file CHANGES.md with your latest changes
+git changelog
+
+# Next update the version in the file terra-opp/VERSION.md
+echo X.X.X > terra-opp/VERSION.md
+
+# Next use git release to create the tag et push your branch & tag to origin
+git releasse X.X.X
+```
+
+After this few steps, you can now go on the github repo to create a new release with the corresponding tag.
