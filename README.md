@@ -97,3 +97,19 @@ To run test suite, just launch:
 ```sh
 docker-compose exec web /code/venv/bin/python3 /code/src/manage.py test
 ```
+
+## Releasing a new version
+
+```sh
+# on the master branch
+# update the file CHANGES.md with your latest changes
+git changelog
+
+# Next update the version in the file terra-opp/VERSION.md
+echo X.X.X > terra-opp/VERSION.md
+
+# Next use git release to create the tag et push your branch & tag to origin
+git releasse X.X.X
+```
+
+After this few steps, you can now go on the github repo to create a new release with the corresponding tag.
