@@ -97,6 +97,7 @@ docker-compose exec web /code/venv/bin/python3 /code/src/manage.py test
 ```
 
 ## Releasing a new version
+
 ```sh
 # on the master branch
 # update the file CHANGES.md with your latest changes
