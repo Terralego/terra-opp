@@ -1,4 +1,11 @@
 
+0.5.6 / 2021-03-30
+==================
+
+  * Update readme with release procedure (#55)
+  * Add more concistency settings naming and documentation
+  * Add checks for TROPP_OBSERVATORY_ID
+
 0.5.5 / 2021-03-30
 ==================
 
