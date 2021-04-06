@@ -32,7 +32,13 @@ class SimpleViewpointSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Viewpoint
-        fields = ("id", "label", "picture", "point")
+        fields = (
+            "id",
+            "label",
+            "picture",
+            "point",
+            "active",
+        )
 
 
 class LabelSlugRelatedField(serializers.SlugRelatedField):
