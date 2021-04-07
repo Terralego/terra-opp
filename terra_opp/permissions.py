@@ -36,7 +36,7 @@ class CampaignPermission(BasePermission):
             if request.user.has_terra_perm("can_manage_campaigns"):
                 return True
             elif request.user.has_terra_perm("can_add_pictures"):
-                return obj.assignee == request.user
+                return obj.assignee == request.user and obj.state != "draft"
 
         return request.user.has_terra_perm("can_manage_campaigns")
 

@@ -93,11 +93,37 @@ class Viewpoint(BaseLabelModel):
         ordering = ["-created_at"]
 
 
+class CampaignManager(models.Manager):
+    # Add stats to campaign
+    def with_stats(self):
+        return self.annotate(
+            viewpoints_total=models.Count("viewpoints", distinct=True),
+            pictures_submited=models.Count(
+                "pictures__pk",
+                filter=models.Q(pictures__state=Picture.SUBMITED),
+                distinct=True,
+            ),
+            pictures_accepted=models.Count(
+                "pictures__pk",
+                filter=models.Q(pictures__state=Picture.ACCEPTED),
+                distinct=True,
+            ),
+            pictures_missing=models.F("viewpoints_total")
+            - models.F("pictures_submited")
+            - models.F("pictures_accepted"),
+        )
+
+
 class Campaign(BaseLabelModel):
+    objects = CampaignManager()
+
+    DRAFT = "draft"
+    STARTED = "started"
+    CLOSED = "closed"
     STATES = (
-        ("draft", _("Draft")),
-        ("started", _("Started")),
-        ("closed", _("Closed")),
+        (DRAFT, _("Draft")),
+        (STARTED, _("Started")),
+        (CLOSED, _("Closed")),
     )
 
     start_date = models.DateField(_("Start date"))
@@ -117,47 +143,7 @@ class Campaign(BaseLabelModel):
         verbose_name=_("Assigned to"),
         related_name="assigned_campaigns",
     )
-    state = models.CharField(_("State"), default="draft", max_length=10, choices=STATES)
-
-    @property
-    def statistics(self):
-        return {"total": self.viewpoints.count()}
-
-        # Kept for later
-        """queryset = self.objects.aggregate(total=Count("viewpoints")).values("total")
-
-        # TODO add campaign start date filter
-        queryset = self.viewpoints.annotate(
-            total=models.Count("pk"),
-            missing=models.Count(
-                "pictures", filter=models.Q(pictures__date__gte=self.start_date)
-            ),
-            pending=models.Count(
-                "pictures",
-                filter=models.Q(
-                    pictures__state=settings.TROPP_STATES.DRAFT,
-                    pictures__date__gte=self.start_date,
-                ),
-            ),
-            accepted=models.Count(
-                "pictures",
-                filter=models.Q(
-                    pictures__state=settings.TROPP_STATES.ACCEPTED,
-                    pictures__date__gte=self.start_date,
-                ),
-            ),
-        ).values("total", "missing", "pending", "accepted")
-        try:
-            return queryset[0]
-        except IndexError:
-            return {"total": 0, "missing": 0, "accepted": 0, "pending": 0}"""
-
-    @property
-    def status(self):
-        # TODO Handle missing photo
-        return not self.viewpoints.exclude(
-            pictures__state="accepted",
-        ).exists()
+    state = models.CharField(_("State"), default=DRAFT, max_length=10, choices=STATES)
 
     class Meta:
         ordering = ["-start_date", "-created_at"]
@@ -170,11 +156,17 @@ def image_upload_to(instance, filename):
 
 
 class Picture(BaseUpdatableModel):
+
+    DRAFT = "draft"
+    SUBMITED = "submited"
+    ACCEPTED = "accepted"
+    REFUSED = "refused"
+
     STATES = (
-        ("draft", _("Draft")),
-        ("submited", _("Submited")),
-        ("accepted", _("Accepted")),
-        ("refused", _("Refused")),
+        (DRAFT, _("Draft")),
+        (SUBMITED, _("Submited")),
+        (ACCEPTED, _("Accepted")),
+        (REFUSED, _("Refused")),
     )
 
     owner = models.ForeignKey(
@@ -188,8 +180,15 @@ class Picture(BaseUpdatableModel):
         on_delete=models.CASCADE,
         related_name="pictures",
     )
+    campaign = models.ForeignKey(
+        Campaign,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="pictures",
+        default=None,
+    )
     # States may be : draft, submitted, accepted, refused
-    state = models.CharField(_("State"), default="draft", choices=STATES, max_length=10)
+    state = models.CharField(_("State"), default=DRAFT, choices=STATES, max_length=10)
 
     properties = JSONField(_("Properties"), default=dict, blank=True)
     file = VersatileImageField(_("File"), upload_to=image_upload_to)
@@ -213,7 +212,7 @@ class Picture(BaseUpdatableModel):
 
     @property
     def identifier(self):
-        obs_id = settings.TROPP_OBSERVATORY_ID
+        obs_id = settings.TROPP_OBSERVATORY_ID or ""
         pic_index = list(
             self.viewpoint.ordered_pics_by_date.values_list("id", flat=True)
         ).index(self.id)

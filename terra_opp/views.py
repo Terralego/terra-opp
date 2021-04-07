@@ -7,7 +7,10 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from django.http import HttpResponseBadRequest
 from django.db.models import Prefetch
+from django.db import models
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +18,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 
 from .filters import (
     CampaignFilterBackend,
@@ -40,6 +44,18 @@ from .serializers import (
 )
 
 from django.db.models import Count
+
+
+class CampaignNotFound(APIException):
+    status_code = 400
+    default_detail = "Can't found any valid campaign to add picture"
+    default_code = "campaign_not_found"
+
+
+class PictureAlreadyExists(APIException):
+    status_code = 400
+    default_detail = "Picture already exists for this viewpoint in that campaign"
+    default_code = "picture_already_exists"
 
 
 class ViewpointViewSet(viewsets.ModelViewSet):
@@ -229,7 +245,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
-    queryset = Campaign.objects.all().annotate(viewpoints_count=Count("viewpoints"))
+    queryset = Campaign.objects.with_stats()
     permission_classes = [
         permissions.CampaignPermission,
     ]
@@ -245,20 +261,13 @@ class CampaignViewSet(viewsets.ModelViewSet):
         return super().filter_queryset(queryset).order_by("-start_date", "-created_at")
 
     def get_queryset(self):
-        # Filter only on assigned campaigns for photographs
         user = self.request.user
-        pictures_qs = Picture.objects.order_by("-created_at")
-        qs = (
-            super()
-            .get_queryset()
-            .prefetch_related(
-                Prefetch(
-                    "viewpoints__pictures", queryset=pictures_qs, to_attr="ordered_pics"
-                )
-            )
-        )
+        qs = super().get_queryset()
+
+        # Filter only on assigned campaigns for photographs
         if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
             return qs.filter(assignee=user, state__in=["started", "closed"])
+
         return qs
 
     def perform_create(self, serializer):
@@ -290,7 +299,37 @@ class PictureViewSet(viewsets.ModelViewSet):
             update_point_properties(serializer.instance.viewpoint, self.request)
 
         elif self.request.user.has_terra_perm("can_add_pictures"):
-            serializer.save(owner=self.request.user)
+            campaign = None
+            viewpoint = serializer.validated_data.get("viewpoint")
+
+            if not "campaign" in serializer.validated_data:
+                # If no campaign specified we try to found one
+                try:
+                    campaign = Campaign.objects.get(
+                        assignee=self.request.user,
+                        state="started",
+                        viewpoints=viewpoint,
+                    )
+                except Campaign.DoesNotExist:
+                    raise CampaignNotFound()
+            else:
+                # Verify whether specified campaign exists
+                campaign = serializer.validated_data.pop("campaign")
+                try:
+                    Campaign.objects.get(
+                        id=campaign.id,
+                        assignee=self.request.user,
+                        state="started",
+                        viewpoints=viewpoint,
+                    )
+                except Campaign.DoesNotExist:
+                    raise CampaignNotFound()
+
+            # Check whether the picture already exists for this viewpoint/campaign
+            if Picture.objects.filter(viewpoint=viewpoint, campaign=campaign).exists():
+                raise PictureAlreadyExists()
+
+            serializer.save(owner=self.request.user, campaign=campaign)
             update_point_properties(serializer.instance.viewpoint, self.request)
 
     def perform_update(self, serializer):
