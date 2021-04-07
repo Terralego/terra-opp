@@ -25,9 +25,10 @@ def update_point_properties(viewpoint: Viewpoint, request: HttpRequest):
     point.properties = {**point.properties, **properties}
 
     # Add thumbnail representation in the feature's properties
-    if viewpoint.pictures.exists():
+    if viewpoint.pictures.filter(state="accepted").exists():
         change_point_thumbnail(
-            viewpoint.pictures.latest(), context={"request": request}
+            viewpoint.pictures.filter(state="accepted").latest(),
+            context={"request": request},
         )
 
     # Add any specified viewpoint property in the feature's properties

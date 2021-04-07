@@ -84,13 +84,19 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
 
 class CampaignSerializer(serializers.ModelSerializer):
     start_date = fields.DateField(input_formats=["%Y-%m-%d"])
-    viewpoints_count = serializers.IntegerField(read_only=True)
     owner = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-    # Override to expose typed data
-    statistics = serializers.DictField(
-        child=serializers.IntegerField(),
-        read_only=True,
-    )
+    viewpoints_total = serializers.IntegerField(read_only=True)
+    statistics = serializers.SerializerMethodField()
+
+    # Format stats to a dict
+    def get_statistics(self, obj):
+
+        return dict(
+            total=obj.viewpoints_total,
+            submited=obj.pictures_submited,
+            accepted=obj.pictures_accepted,
+            missing=obj.pictures_missing,
+        )
 
     class Meta:
         model = Campaign
@@ -98,9 +104,6 @@ class CampaignSerializer(serializers.ModelSerializer):
 
 
 class ListCampaignNestedSerializer(CampaignSerializer):
-
-    status = serializers.BooleanField(read_only=True)
-
     class Meta(CampaignSerializer.Meta):
         model = Campaign
         fields = (
@@ -109,7 +112,6 @@ class ListCampaignNestedSerializer(CampaignSerializer):
             "start_date",
             "assignee",
             "statistics",
-            "status",
             "state",
             "viewpoints_count",
         )

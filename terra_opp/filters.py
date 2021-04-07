@@ -9,8 +9,15 @@ from django_filters.rest_framework import filters
 from rest_framework.exceptions import ValidationError
 from rest_framework.filters import BaseFilterBackend
 from url_filter.integrations.drf import DjangoFilterBackend
+from rest_framework.exceptions import APIException
 
 from .models import Viewpoint, Picture, Campaign
+
+
+class BadFilter(APIException):
+    status_code = 400
+    default_detail = "Bad filter"
+    default_code = "bad_filter"
 
 
 class CampaignFilterBackend(BaseFilterBackend):
@@ -22,42 +29,42 @@ class CampaignFilterBackend(BaseFilterBackend):
         super().get_schema_fields(view)
         return [
             coreapi.Field(
-                name="status",
+                name="state",
                 required=False,
                 location="query",
                 schema=coreschema.Boolean(
-                    title="Campaign status",
-                    description="0 for closed campaign, 1 for ongoing campaign",
+                    title="Campaign state",
+                    description="'draft', 'started' or 'closed'",
                 ),
             ),
             coreapi.Field(
-                name="picture_state",
+                name="picture__state",
                 required=False,
                 location="query",
                 schema=coreschema.Enum(
                     Picture.STATES,
                     description=str(pformat(Picture.STATES)),
-                    title="Picture status",
+                    title="Picture state",
                 ),
             ),
         ]
 
     def filter_queryset(self, request, queryset, view):
-        status = request.GET.get("status", None)
-        if status is not None:
-            try:
-                assert status in [s[0] for s in Campaign.STATES]
-            except ValueError:
-                raise ValidationError
-            queryset = queryset.filter(state=status)
+        state = request.GET.get("state", None)
+        if state is not None:
 
-        picture_status = request.GET.get("picture_status", None)
-        if picture_status is not None:
-            try:
-                assert picture_status in [s[0] for s in Picture.STATES]
-            except (AssertionError, ValueError):
-                raise ValidationError
-            queryset = queryset.filter(viewpoints__pictures__state=picture_status)
+            if not state in [s[0] for s in Campaign.STATES]:
+                raise BadFilter("Bad filter value for campaign state")
+
+            queryset = queryset.filter(state=state)
+
+        pictures_state = request.GET.get("pictures__state", None)
+        if pictures_state is not None:
+
+            if not pictures_state in [s[0] for s in Picture.STATES]:
+                raise BadFilter("Bad filter value for pictures state")
+
+            queryset = queryset.filter(pictures__state=pictures_state)
 
         return queryset
 
