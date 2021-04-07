@@ -1,4 +1,9 @@
 
+0.6.1 / 2021-04-07
+==================
+
+  * Add active status to simpleviewpoint serializer
+
 0.6.0 / 2021-03-30
 ==================
 
