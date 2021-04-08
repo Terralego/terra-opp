@@ -7,8 +7,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
-from django.http import HttpResponseBadRequest
 from django.db.models import Prefetch
 from django.db import models
 from django.utils.decorators import method_decorator
@@ -43,8 +41,6 @@ from .serializers import (
     ViewpointSerializerWithPicture,
     PhotographSerializer,
 )
-
-from django.db.models import Count
 
 
 class CampaignNotFound(APIException):
@@ -276,7 +272,7 @@ class PictureViewSet(viewsets.ModelViewSet):
             campaign = None
             viewpoint = serializer.validated_data.get("viewpoint")
 
-            if not "campaign" in serializer.validated_data:
+            if "campaign" not in serializer.validated_data:
                 # If no campaign specified we try to found one
                 try:
                     campaign = Campaign.objects.get(
