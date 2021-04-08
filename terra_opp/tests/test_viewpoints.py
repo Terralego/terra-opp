@@ -177,7 +177,9 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
     def test_viewpoint_picture_filter_anonymous(self):
         data = self.client.get(
             reverse("terra_opp:viewpoint-list"),
-            {"pictures__id": self.viewpoint_with_accepted_picture.pictures.first().pk},
+            {
+                "pictures__identifier": self.viewpoint_with_accepted_picture.pictures.first().identifier
+            },
         ).json()
         self.assertEqual(data.get("count"), 1)
 
@@ -185,7 +187,9 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         self.client.force_authenticate(user=self.user)
         data = self.client.get(
             reverse("terra_opp:viewpoint-list"),
-            {"pictures__id": self.viewpoint_with_accepted_picture.pictures.first().pk},
+            {
+                "pictures__identifier": self.viewpoint_with_accepted_picture.pictures.first().identifier
+            },
         ).json()
         self.assertEqual(data.get("count"), 1)
 
