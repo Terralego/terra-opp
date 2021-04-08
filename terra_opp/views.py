@@ -35,6 +35,7 @@ from . import permissions
 
 from .serializers import (
     CampaignSerializer,
+    RoCampaignSerializer,
     ListCampaignNestedSerializer,
     PictureSerializer,
     SimpleAuthenticatedViewpointSerializer,
@@ -244,41 +245,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class CampaignViewSet(viewsets.ModelViewSet):
-    queryset = Campaign.objects.with_stats()
-    permission_classes = [
-        permissions.CampaignPermission,
-    ]
-    http_method_names = ["get", "post", "put", "delete", "options"]
-    filter_backends = (CampaignFilterBackend, SearchFilter)
-    search_fields = ("label",)
-    pagination_class = RestPageNumberPagination
-
-    def filter_queryset(self, queryset):
-        # We must reorder the queryset here because initial filtering in
-        # viewpoint model is not done right see
-        # https://github.com/encode/django-rest-framework/issues/1717
-        return super().filter_queryset(queryset).order_by("-start_date", "-created_at")
-
-    def get_queryset(self):
-        user = self.request.user
-        qs = super().get_queryset()
-
-        # Filter only on assigned campaigns for photographs
-        if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
-            return qs.filter(assignee=user, state__in=["started", "closed"])
-
-        return qs
-
-    def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-    def get_serializer_class(self):
-        if self.action == "list":
-            return ListCampaignNestedSerializer
-        return CampaignSerializer
-
-
 class PictureViewSet(viewsets.ModelViewSet):
     queryset = Picture.objects.all()
     serializer_class = PictureSerializer
@@ -351,3 +317,43 @@ class PictureViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         remove_point_thumbnail(instance, self.request)
         instance.delete()
+
+
+class CampaignViewSet(viewsets.ModelViewSet):
+    queryset = Campaign.objects.with_stats()
+    permission_classes = [
+        permissions.CampaignPermission,
+    ]
+    http_method_names = ["get", "post", "put", "delete", "options"]
+    filter_backends = (CampaignFilterBackend, SearchFilter)
+    search_fields = ("label",)
+    pagination_class = RestPageNumberPagination
+
+    def filter_queryset(self, queryset):
+        # We must reorder the queryset here because initial filtering in
+        # viewpoint model is not done right see
+        # https://github.com/encode/django-rest-framework/issues/1717
+        return super().filter_queryset(queryset).order_by("-start_date", "-created_at")
+
+    def get_queryset(self):
+        user = self.request.user
+        qs = super().get_queryset()
+
+        # Filter only on assigned campaigns for photographs
+        if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
+            return qs.filter(assignee=user, state__in=["started", "closed"])
+
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return ListCampaignNestedSerializer
+
+        # Serializer without stats for update
+        if self.action in ["create", "update"]:
+            return CampaignSerializer
+
+        return RoCampaignSerializer

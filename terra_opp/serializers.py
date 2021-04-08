@@ -82,41 +82,6 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
         )
 
 
-class CampaignSerializer(serializers.ModelSerializer):
-    start_date = fields.DateField(input_formats=["%Y-%m-%d"])
-    owner = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
-    viewpoints_total = serializers.IntegerField(read_only=True)
-    statistics = serializers.SerializerMethodField()
-
-    # Format stats to a dict
-    def get_statistics(self, obj):
-
-        return dict(
-            total=obj.viewpoints_total,
-            submited=obj.pictures_submited,
-            accepted=obj.pictures_accepted,
-            missing=obj.pictures_missing,
-        )
-
-    class Meta:
-        model = Campaign
-        fields = "__all__"
-
-
-class ListCampaignNestedSerializer(CampaignSerializer):
-    class Meta(CampaignSerializer.Meta):
-        model = Campaign
-        fields = (
-            "id",
-            "label",
-            "start_date",
-            "assignee",
-            "statistics",
-            "state",
-            "viewpoints_count",
-        )
-
-
 class PhotographSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserModel
@@ -276,3 +241,41 @@ class ViewpointLabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Viewpoint
         fields = ("id", "label")
+
+
+# Writable serializer
+class CampaignSerializer(serializers.ModelSerializer):
+    start_date = fields.DateField(input_formats=["%Y-%m-%d"])
+    owner = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+
+    class Meta:
+        model = Campaign
+        fields = "__all__"
+
+
+# ReadOnly serializer
+class RoCampaignSerializer(CampaignSerializer):
+    statistics = serializers.SerializerMethodField()
+
+    # Format stats as dict
+    def get_statistics(self, obj):
+        return dict(
+            total=obj.viewpoints_total,
+            submited=obj.pictures_submited,
+            accepted=obj.pictures_accepted,
+            missing=obj.pictures_missing,
+        )
+
+
+# List serializer
+class ListCampaignNestedSerializer(RoCampaignSerializer):
+    class Meta(CampaignSerializer.Meta):
+        model = Campaign
+        fields = (
+            "id",
+            "label",
+            "start_date",
+            "assignee",
+            "statistics",
+            "state",
+        )
