@@ -69,12 +69,12 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     filterset_class = ViewpointFilterSet
     filter_fields_schema = [
         coreapi.Field(
-            name="pictures__id",
+            name="pictures__identifier",
             required=False,
             location="query",
             schema=coreschema.Integer(
-                title="Picture id",
-                description="Picture id to filter on",
+                title="Picture identifier",
+                description="Picture identifier to filter on",
             ),
         ),
         coreapi.Field(

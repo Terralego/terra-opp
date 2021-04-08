@@ -17,7 +17,7 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
     )
 
     def ready(self):
-        from . import checks  # NOQA
+        from . import checks, receivers  # NOQA
         from geostore import models
 
         super().ready()

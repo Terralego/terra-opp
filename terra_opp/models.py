@@ -204,6 +204,7 @@ class Picture(BaseUpdatableModel):
 
     # Different from created_at which is the upload date
     date = models.DateTimeField(_("Date"))
+    identifier = models.PositiveIntegerField(_("Identifier"), null=True)
 
     class Meta:
         permissions = (
@@ -222,8 +223,7 @@ class Picture(BaseUpdatableModel):
         if self.campaign:
             self.campaign.check_state()
 
-    @property
-    def identifier(self):
+    def get_identifier(self):
         obs_id = settings.TROPP_OBSERVATORY_ID or ""
         pic_index = list(
             self.viewpoint.ordered_pics_by_date.values_list("id", flat=True)
