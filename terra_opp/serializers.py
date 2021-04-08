@@ -128,6 +128,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
         many=True,
     )
     pictures = SimplePictureSerializer(many=True, read_only=True)
+    last_accepted_picture_date = serializers.DateTimeField(read_only=True)
     related = RelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source="point.geom")
     city = CityLabelSlugRelatedField(
@@ -153,6 +154,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             "city",
             "themes",
             "active",
+            "last_accepted_picture_date",
         )
 
     @transaction.atomic
