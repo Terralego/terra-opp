@@ -33,7 +33,7 @@ class ViewpointsManager(models.Manager):
             super()
             .get_queryset()
             .filter(
-                pictures__state="accepted",
+                pictures__state=Picture.ACCEPTED,
             )
             .distinct()
         )

@@ -1,3 +1,4 @@
+from .models import Picture, Campaign
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
@@ -36,7 +37,7 @@ class CampaignPermission(BasePermission):
             if request.user.has_terra_perm("can_manage_campaigns"):
                 return True
             elif request.user.has_terra_perm("can_add_pictures"):
-                return obj.assignee == request.user and obj.state != "draft"
+                return obj.assignee == request.user and obj.state != Campaign.DRAFT
 
         return request.user.has_terra_perm("can_manage_campaigns")
 
@@ -73,8 +74,8 @@ class PicturePermission(BasePermission):
 
         if request.user.has_terra_perm("can_add_pictures"):
             return obj.owner == request.user and obj.state in [
-                "draft",
-                "refused",
+                Picture.DRAFT,
+                Picture.REFUSED,
             ]
 
         return False

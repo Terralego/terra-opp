@@ -265,7 +265,7 @@ class PictureViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         if self.request.user.has_terra_perm("can_manage_pictures"):
-            state = "accepted"
+            state = Picture.ACCEPTED
             owner = serializer.validated_data.get("owner")
             if not owner:
                 owner = self.request.user
@@ -281,7 +281,7 @@ class PictureViewSet(viewsets.ModelViewSet):
                 try:
                     campaign = Campaign.objects.get(
                         assignee=self.request.user,
-                        state="started",
+                        state=Campaign.STARTED,
                         viewpoints=viewpoint,
                     )
                 except Campaign.DoesNotExist:
@@ -293,7 +293,7 @@ class PictureViewSet(viewsets.ModelViewSet):
                     Campaign.objects.get(
                         id=campaign.id,
                         assignee=self.request.user,
-                        state="started",
+                        state=Campaign.STARTED,
                         viewpoints=viewpoint,
                     )
                 except Campaign.DoesNotExist:
@@ -314,10 +314,10 @@ class PictureViewSet(viewsets.ModelViewSet):
         elif self.request.user.has_terra_perm("can_add_pictures"):
             new_state = serializer.validated_data["state"]
             if new_state not in [
-                "draft",
-                "submited",
+                Picture.DRAFT,
+                Picture.SUBMITED,
             ]:
-                new_state = "draft"
+                new_state = Picture.DRAFT
             # For self as user and draft state
             serializer.save(owner=self.request.user, state=new_state)
             update_point_properties(serializer.instance.viewpoint, self.request)
@@ -352,7 +352,9 @@ class CampaignViewSet(viewsets.ModelViewSet):
 
         # Filter only on assigned campaigns for photographs
         if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
-            return qs.filter(assignee=user, state__in=["started", "closed"])
+            return qs.filter(
+                assignee=user, state__in=[Campaign.STARTED, Campaign.CLOSED]
+            )
 
         return qs
 
