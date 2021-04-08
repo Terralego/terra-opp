@@ -145,6 +145,15 @@ class Campaign(BaseLabelModel):
     )
     state = models.CharField(_("State"), default=DRAFT, max_length=10, choices=STATES)
 
+    # Auto close campaign if all pictures are accepted
+    def check_state(self):
+        if (
+            self.pictures.filter(state=Picture.ACCEPTED).count()
+            == self.viewpoints.count()
+        ):
+            self.state = Campaign.CLOSED
+            self.save()
+
     class Meta:
         ordering = ["-start_date", "-created_at"]
 
@@ -209,6 +218,9 @@ class Picture(BaseUpdatableModel):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
+        # Update Campaign status if any
+        if self.campaign:
+            self.campaign.check_state()
 
     @property
     def identifier(self):

@@ -327,8 +327,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             "state": "draft",
         }
 
+        # Photograph post draft photo
         self.as_photograph()
-
         response = self.client.post(
             reverse("terra_opp:picture-list"),
             data,
@@ -337,6 +337,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         latest_picture = viewpoint.pictures.latest()
 
+        # Then submit the photo
         response = self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
@@ -345,8 +346,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             {"state": "submited"},
         )
 
+        # Admin refuse the photo
         self.as_admin()
-
         response = self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
@@ -355,8 +356,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             {"state": "refused"},
         )
 
+        # Photograph update the photo
         self.as_photograph()
-
         response = self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
@@ -366,8 +367,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             format="multipart",
         )
 
+        # Admin accept the photo
         self.as_admin()
-
         response = self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
@@ -377,7 +378,6 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         )
 
         latest_picture.refresh_from_db()
-
         self.assertEqual(latest_picture.state, "accepted")
 
     def test_statistics(self):
@@ -404,12 +404,6 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         def stats(response):
             return response.json().get("statistics")
-            """return dict(
-                total=data["viewpoints_total"],
-                submited=data["pictures_submited"],
-                accepted=data["pictures_accepted"],
-                missing=data["pictures_missing"],
-            )"""
 
         self.assertEqual(
             stats(response),
@@ -443,12 +437,9 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             {"state": "submited"},
         )
 
-        print([p.state for p in campaign.pictures.all()])
-
         # Should have 1 submited
         self.as_admin()
         response = self.client.get(campaign_url)
-        print(response.json())
         self.assertEqual(
             stats(response),
             {"total": 4, "missing": 3, "submited": 1, "accepted": 0},
@@ -481,6 +472,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             {"state": "accepted"},
         )
 
+        # One shoud be accepted
         response = self.client.get(campaign_url)
         self.assertEqual(
             stats(response),
@@ -497,8 +489,82 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             {"state": "refused"},
         )
 
+        # Refused are considered as missing
         response = self.client.get(campaign_url)
         self.assertEqual(
             stats(response),
             {"total": 4, "missing": 3, "submited": 0, "accepted": 1},
+        )
+
+    def test_auto_close(self):
+        viewpoint = ViewpointFactory(pictures__state="accepted")
+        viewpoint2 = ViewpointFactory(pictures__state="accepted")
+
+        campaign = CampaignFactory(assignee=self.photograph, state="started")
+        campaign.viewpoints.set([viewpoint, viewpoint2])
+        campaign_url = resolve_url("terra_opp:campaign-detail", pk=campaign.pk)
+
+        data = {
+            "viewpoint": viewpoint.pk,
+            "date": timezone.datetime(2020, 8, 19, tzinfo=timezone.utc),
+            "file": self._gen_file(),
+            "state": "draft",
+        }
+
+        # Stats without any photo
+        self.as_admin()
+
+        response = self.client.get(campaign_url)
+
+        def stats(response):
+            return response.json().get("statistics")
+
+        # Add draft photo
+        self.as_photograph()
+        response = self.client.post(
+            reverse("terra_opp:picture-list"),
+            data,
+            format="multipart",
+        )
+        data["viewpoint"] = viewpoint2.pk
+        data["file"] = self._gen_file()
+        response = self.client.post(
+            reverse("terra_opp:picture-list"),
+            data,
+            format="multipart",
+        )
+
+        self.as_admin()
+
+        latest_picture = viewpoint.pictures.latest()
+        latest_picture2 = viewpoint2.pictures.latest()
+
+        response = self.client.patch(
+            reverse(
+                "terra_opp:picture-detail",
+                args=[latest_picture.pk],
+            ),
+            {"state": "accepted"},
+        )
+
+        # Should still be started
+        response = self.client.get(campaign_url)
+        self.assertEqual(
+            response.json()["state"],
+            "started",
+        )
+
+        response = self.client.patch(
+            reverse(
+                "terra_opp:picture-detail",
+                args=[latest_picture2.pk],
+            ),
+            {"state": "accepted"},
+        )
+
+        # Should be closed after last accepted picture
+        response = self.client.get(campaign_url)
+        self.assertEqual(
+            response.json()["state"],
+            "closed",
         )
