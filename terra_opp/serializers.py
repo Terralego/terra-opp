@@ -111,7 +111,13 @@ class PictureSerializer(serializers.ModelSerializer):
 class SimplePictureSerializer(PictureSerializer):
     class Meta:
         model = Picture
-        fields = ("id", "date", "file", "owner", "properties", "identifier")
+        fields = ("id", "date", "file", "owner", "properties", "state", "identifier")
+
+
+class CampaignPictureSerializer(PictureSerializer):
+    class Meta:
+        model = Picture
+        fields = ("id", "date", "state", "viewpoint")
 
 
 class ViewpointSerializerWithPicture(serializers.ModelSerializer):
@@ -255,6 +261,7 @@ class CampaignSerializer(serializers.ModelSerializer):
 
 # ReadOnly serializer
 class RoCampaignSerializer(CampaignSerializer):
+    pictures = CampaignPictureSerializer(many=True, read_only=True)
     statistics = serializers.SerializerMethodField()
 
     # Format stats as dict
