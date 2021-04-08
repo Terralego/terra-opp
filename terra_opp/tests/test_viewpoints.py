@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile, UploadedFile
 from django.test import override_settings
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, dateparse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -128,6 +128,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             )
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(None, response.json()["last_accepted_picture_date"])
 
     def test_anonymous_options_request_returns_correct_search_filters(self):
         city1 = CityFactory(label="Montcuq")
@@ -523,6 +524,21 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
 
         # We create a more recent picture
         date = timezone.datetime(2019, 1, 1, tzinfo=timezone.utc)
+
+        response = self.client.get(
+            reverse(
+                "terra_opp:viewpoint-detail",
+                args=[
+                    self.viewpoint_with_accepted_picture.pk,
+                ],
+            ),
+        )
+        # Before last accepted date should be in 2018
+        self.assertEqual(
+            timezone.datetime(2018, 1, 1, tzinfo=timezone.utc),
+            dateparse.parse_datetime(response.json()["last_accepted_picture_date"]),
+        )
+
         file = SimpleUploadedFile(
             name="test.jpg",
             content=open(
@@ -547,7 +563,14 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             ),
             {"picture_ids": [picture.id]},
         )
+
         self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        # New last picture date now
+        self.assertEqual(
+            date,
+            dateparse.parse_datetime(response.json()["last_accepted_picture_date"]),
+        )
 
         viewpoint = Viewpoint.objects.get(pk=self.viewpoint_with_accepted_picture.pk)
         self.assertEqual(1, viewpoint.pictures.count())
