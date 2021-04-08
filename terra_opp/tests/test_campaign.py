@@ -105,7 +105,11 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(response.data.get("count"), 3)
 
-        self.assertEqual(status.HTTP_200_OK, self.client.get(campaign_url).status_code)
+        campaign_response = self.client.get(campaign_url)
+        self.assertEqual(status.HTTP_200_OK, campaign_response.status_code)
+
+        self.assertNumQueries(3, lambda: self.client.get(campaign_url))
+
         self.assertEqual(
             status.HTTP_200_OK, self.client.get(campaign_other_url).status_code
         )
@@ -418,12 +422,25 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             format="multipart",
         )
 
-        # Draft photo are considered as missing
+        # Draft photo are considered as missing...
         self.as_admin()
         response = self.client.get(campaign_url)
         self.assertEqual(
             stats(response),
             {"total": 4, "missing": 4, "submited": 0, "accepted": 0},
+        )
+
+        # ...But are listed
+        self.assertEqual(
+            response.json()["pictures"],
+            [
+                {
+                    "viewpoint": 14,
+                    "date": "2020-08-19T00:00:00Z",
+                    "id": 22,
+                    "state": "draft",
+                }
+            ],
         )
 
         # Submit photo
@@ -478,6 +495,27 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
             stats(response),
             {"total": 4, "missing": 2, "submited": 1, "accepted": 1},
         )
+        self.assertEqual(
+            response.json()["pictures"],
+            [
+                {
+                    "viewpoint": 15,
+                    "date": "2020-08-19T00:00:00Z",
+                    "id": 23,
+                    "state": "submited",
+                },
+                {
+                    "viewpoint": 14,
+                    "date": "2020-08-19T00:00:00Z",
+                    "id": 22,
+                    "state": "accepted",
+                },
+            ],
+        )
+
+        # Perf check 3 queries even if 2 images and 4 viewpoints
+        # One for campaign, one for viewpoints, one for pictures
+        self.assertNumQueries(3, lambda: self.client.get(campaign_url))
 
         latest_picture2 = viewpoint2.pictures.latest()
 

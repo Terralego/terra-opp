@@ -339,6 +339,9 @@ class CampaignViewSet(viewsets.ModelViewSet):
         user = self.request.user
         qs = super().get_queryset()
 
+        if self.action == "retrieve":
+            qs = qs.prefetch_related("pictures")
+
         # Filter only on assigned campaigns for photographs
         if self.action == "list" and not user.has_terra_perm("can_manage_campaigns"):
             return qs.filter(assignee=user, state__in=["started", "closed"])
