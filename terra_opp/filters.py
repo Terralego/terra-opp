@@ -6,7 +6,6 @@ from django.conf import settings
 from django.contrib.postgres.fields.jsonb import KeyTextTransform
 from django_filters import FilterSet
 from django_filters.rest_framework import filters
-from rest_framework.exceptions import ValidationError
 from rest_framework.filters import BaseFilterBackend
 from url_filter.integrations.drf import DjangoFilterBackend
 from rest_framework.exceptions import APIException
@@ -53,7 +52,7 @@ class CampaignFilterBackend(BaseFilterBackend):
         state = request.GET.get("state", None)
         if state is not None:
 
-            if not state in [s[0] for s in Campaign.STATES]:
+            if state not in [s[0] for s in Campaign.STATES]:
                 raise BadFilter("Bad filter value for campaign state")
 
             queryset = queryset.filter(state=state)
@@ -61,7 +60,7 @@ class CampaignFilterBackend(BaseFilterBackend):
         pictures_state = request.GET.get("pictures__state", None)
         if pictures_state is not None:
 
-            if not pictures_state in [s[0] for s in Picture.STATES]:
+            if pictures_state not in [s[0] for s in Picture.STATES]:
                 raise BadFilter("Bad filter value for pictures state")
 
             queryset = queryset.filter(pictures__state=pictures_state)

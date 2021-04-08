@@ -1,5 +1,4 @@
 from django.shortcuts import resolve_url
-from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -123,8 +122,8 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         campaign = CampaignFactory(assignee=self.photograph)
         campaign.viewpoints.set([viewpoint])
 
-        campaign2 = CampaignFactory(assignee=self.photograph, state="started")
-        campaign3 = CampaignFactory(assignee=self.photograph, state="closed")
+        CampaignFactory(assignee=self.photograph, state="started")
+        CampaignFactory(assignee=self.photograph, state="closed")
 
         picture = PictureFactory(state="draft", viewpoint=viewpoint, campaign=campaign)
 
@@ -333,7 +332,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         # Photograph post draft photo
         self.as_photograph()
-        response = self.client.post(
+        self.client.post(
             reverse("terra_opp:picture-list"),
             data,
             format="multipart",
@@ -342,7 +341,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
         latest_picture = viewpoint.pictures.latest()
 
         # Then submit the photo
-        response = self.client.patch(
+        self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
                 args=[latest_picture.pk],
@@ -352,7 +351,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         # Admin refuse the photo
         self.as_admin()
-        response = self.client.patch(
+        self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
                 args=[latest_picture.pk],
@@ -362,7 +361,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         # Photograph update the photo
         self.as_photograph()
-        response = self.client.patch(
+        self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
                 args=[latest_picture.pk],
@@ -373,7 +372,7 @@ class CampaignTestCase(TestPermissionsMixin, APITestCase):
 
         # Admin accept the photo
         self.as_admin()
-        response = self.client.patch(
+        self.client.patch(
             reverse(
                 "terra_opp:picture-detail",
                 args=[latest_picture.pk],
