@@ -1,4 +1,14 @@
 
+0.6.2 / 2021-04-10
+==================
+
+  * Use constant state
+  * Add last_picture_date field
+  * Add picture data
+  * Add auto close feature
+  * Add stats
+  * Add campaign -> picture link
+
 0.6.1 / 2021-04-07
 ==================
 
