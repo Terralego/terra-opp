@@ -1,4 +1,9 @@
 
+0.6.3 / 2021-04-12
+==================
+
+  * Allowing viewpoint to be filter by pictures identifier
+
 0.6.2 / 2021-04-10
 ==================
 
