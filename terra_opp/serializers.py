@@ -101,7 +101,7 @@ class PictureSerializer(serializers.ModelSerializer):
     )
     owner = PhotographSerializer(read_only=True)
     file = VersatileImageFieldSerializer("terra_opp")
-    identifier = serializers.IntegerField(read_only=True)
+    identifier = serializers.CharField(read_only=True)
 
     class Meta:
         model = Picture

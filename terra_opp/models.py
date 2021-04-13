@@ -204,7 +204,7 @@ class Picture(BaseUpdatableModel):
 
     # Different from created_at which is the upload date
     date = models.DateTimeField(_("Date"))
-    identifier = models.PositiveIntegerField(_("Identifier"), null=True)
+    identifier = models.CharField(_("Identifier"), default="", max_length=10)
 
     class Meta:
         permissions = (
@@ -229,4 +229,4 @@ class Picture(BaseUpdatableModel):
             self.viewpoint.ordered_pics_by_date.values_list("id", flat=True)
         ).index(self.id)
         pic_index += 1  # list index start at 0, picture order start at 1
-        return int(f"{obs_id}0{self.viewpoint.id:03}{pic_index:02}")
+        return f"{obs_id}0{self.viewpoint.id:03}{pic_index:02}"
