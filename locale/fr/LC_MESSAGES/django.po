@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-10 16:25+0000\n"
+"POT-Creation-Date: 2021-04-14 10:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,43 +24,83 @@ msgstr "OPP - Gestion des points de vue"
 
 #: terra_opp/apps.py:14
 msgid "Can manage pictures"
-msgstr "OPP - Gestion des photos"
+msgstr "OPP - Gestion des photographies"
 
-#: terra_opp/models.py:18
+#: terra_opp/apps.py:15
+msgid "Can add pictures"
+msgstr "OPP - Proposer des photos"
+
+#: terra_opp/apps.py:16
+msgid "Can manage campaign"
+msgstr "OPP - Gestion des campagnes"
+
+#: terra_opp/models.py:21
 msgid "Label"
 msgstr "Label"
 
-#: terra_opp/models.py:41
+#: terra_opp/models.py:44
 msgid "Cities"
-msgstr "Villes"
+msgstr "Communes"
 
-#: terra_opp/models.py:64 terra_opp/models.py:167
+#: terra_opp/models.py:67 terra_opp/models.py:202
 msgid "Properties"
 msgstr "Propriétés"
 
-#: terra_opp/models.py:66
+#: terra_opp/models.py:69
 msgid "Active"
 msgstr "Actif"
 
-#: terra_opp/models.py:111 terra_opp/models.py:153
+#: terra_opp/models.py:124 terra_opp/models.py:175
+msgid "Draft"
+msgstr "Brouillon"
+
+#: terra_opp/models.py:125
+msgid "Started"
+msgstr "Démarrée"
+
+#: terra_opp/models.py:126
+msgid "Closed"
+msgstr "Temninée"
+
+#: terra_opp/models.py:129
+msgid "Start date"
+msgstr "Date"
+
+#: terra_opp/models.py:137 terra_opp/models.py:184
 msgid "Owner"
 msgstr "Autheur"
 
-#: terra_opp/models.py:117
+#: terra_opp/models.py:143
 msgid "Assigned to"
 msgstr "Assigné à"
 
-#: terra_opp/models.py:163
+#: terra_opp/models.py:146 terra_opp/models.py:200
 msgid "State"
 msgstr "État"
 
-#: terra_opp/models.py:168
+#: terra_opp/models.py:176
+msgid "Submited"
+msgstr "Soumise"
+
+#: terra_opp/models.py:177
+msgid "Accepted"
+msgstr "Acceptée"
+
+#: terra_opp/models.py:178
+msgid "Refused"
+msgstr "Refusée"
+
+#: terra_opp/models.py:203
 msgid "File"
 msgstr "Fichier"
 
-#: terra_opp/models.py:171
+#: terra_opp/models.py:206
 msgid "Date"
 msgstr "Date"
+
+#: terra_opp/models.py:207
+msgid "Identifier"
+msgstr "Identifiant"
 
 #: terra_opp/templates/terra_opp/viewpoint_pdf.html:14
 msgid "Site"

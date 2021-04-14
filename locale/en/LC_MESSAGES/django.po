@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-10 16:25+0000\n"
+"POT-Creation-Date: 2021-04-14 10:11+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,40 +26,80 @@ msgstr ""
 msgid "Can manage pictures"
 msgstr ""
 
-#: terra_opp/models.py:18
+#: terra_opp/apps.py:15
+msgid "Can add pictures"
+msgstr ""
+
+#: terra_opp/apps.py:16
+msgid "Can manage campaign"
+msgstr ""
+
+#: terra_opp/models.py:21
 msgid "Label"
 msgstr ""
 
-#: terra_opp/models.py:41
+#: terra_opp/models.py:44
 msgid "Cities"
 msgstr ""
 
-#: terra_opp/models.py:64 terra_opp/models.py:167
+#: terra_opp/models.py:67 terra_opp/models.py:202
 msgid "Properties"
 msgstr ""
 
-#: terra_opp/models.py:66
+#: terra_opp/models.py:69
 msgid "Active"
 msgstr ""
 
-#: terra_opp/models.py:111 terra_opp/models.py:153
+#: terra_opp/models.py:124 terra_opp/models.py:175
+msgid "Draft"
+msgstr ""
+
+#: terra_opp/models.py:125
+msgid "Started"
+msgstr ""
+
+#: terra_opp/models.py:126
+msgid "Closed"
+msgstr ""
+
+#: terra_opp/models.py:129
+msgid "Start date"
+msgstr ""
+
+#: terra_opp/models.py:137 terra_opp/models.py:184
 msgid "Owner"
 msgstr ""
 
-#: terra_opp/models.py:117
+#: terra_opp/models.py:143
 msgid "Assigned to"
 msgstr ""
 
-#: terra_opp/models.py:163
+#: terra_opp/models.py:146 terra_opp/models.py:200
 msgid "State"
 msgstr ""
 
-#: terra_opp/models.py:168
+#: terra_opp/models.py:176
+msgid "Submited"
+msgstr ""
+
+#: terra_opp/models.py:177
+msgid "Accepted"
+msgstr ""
+
+#: terra_opp/models.py:178
+msgid "Refused"
+msgstr ""
+
+#: terra_opp/models.py:203
 msgid "File"
 msgstr ""
 
-#: terra_opp/models.py:171
+#: terra_opp/models.py:206
 msgid "Date"
+msgstr ""
+
+#: terra_opp/models.py:207
+msgid "Identifier"
 msgstr ""
 
 #: terra_opp/templates/terra_opp/viewpoint_pdf.html:14
