@@ -7,7 +7,7 @@ class CitiesTestCase(TestCase):
         City.objects.create(label="LYON")
         City.objects.create(label="pARIS")
 
-    def test_capitalize(self) :
+    def test_capitalize(self):
         self.assertTrue(City.objects.filter(label="Lyon").exists())
         self.assertFalse(City.objects.filter(label="LYON").exists())
 
