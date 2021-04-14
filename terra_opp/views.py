@@ -14,7 +14,7 @@ from django.template import loader
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import viewsets
+from rest_framework import viewsets, renderers
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
@@ -219,6 +219,20 @@ class ViewpointViewSet(viewsets.ModelViewSet):
             .only("file")
         )
         return Response([p.file for p in qs])
+
+    @action(
+        detail=True,
+        renderer_classes=[renderers.TemplateHTMLRenderer],
+    )
+    def preview(self, request, *args, **kwargs):
+        properties_set = settings.TROPP_VIEWPOINT_PROPERTIES_SET["pdf"]
+        return Response(
+            {
+                "viewpoint": self.get_object(),
+                "properties_set": properties_set,
+            },
+            template_name="terra_opp/viewpoint_pdf.html",
+        )
 
     @method_decorator(cache_page(60 * 5))
     @action(
