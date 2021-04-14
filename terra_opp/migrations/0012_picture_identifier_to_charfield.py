@@ -3,24 +3,6 @@
 from django.db import migrations, models
 
 
-def populate_new_identifier(apps, schema_editor):
-    Picture = apps.get_model("terra_opp", "Picture")
-
-    for picture in Picture.objects.all():
-        if picture.identifier:
-            picture.new_identifier = str(picture.identifier)
-            picture.save()
-
-
-def populate_identifier(apps, schema_editor):
-    Picture = apps.get_model("terra_opp", "Picture")
-
-    for picture in Picture.objects.all():
-        if picture.new_identifier:
-            picture.identifier = int(picture.new_identifier)
-            picture.save()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -28,24 +10,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RenameField(
+            model_name="picture",
+            old_name="identifier",
+            new_name="old_identifier",
+        ),
         migrations.AddField(
             model_name="picture",
-            name="new_identifier",
+            name="identifier",
             field=models.CharField(
                 default="", max_length=10, verbose_name="Identifier"
             ),
-        ),
-        migrations.RunPython(
-            code=populate_new_identifier,
-            reverse_code=populate_identifier,
-        ),
-        migrations.RemoveField(
-            model_name="picture",
-            name="identifier",
-        ),
-        migrations.RenameField(
-            model_name="picture",
-            old_name="new_identifier",
-            new_name="identifier",
         ),
     ]
