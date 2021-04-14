@@ -40,6 +40,10 @@ class ViewpointsManager(models.Manager):
 
 
 class City(BaseLabelModel):
+    def save(self, *args, **kwargs):
+        self.label = self.label.capitalize()
+        return super(City, self).save(*args, **kwargs)
+
     class Meta:
         verbose_name_plural = _("Cities")
 
