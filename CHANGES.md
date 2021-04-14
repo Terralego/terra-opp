@@ -1,4 +1,12 @@
 
+0.6.4 / 2021-04-14
+==================
+
+  * Add vertical thumbnail
+  * Normalize case for cities (#62)
+  * Update translations
+  * Change picture identifier from integer to string
+
 0.6.3 / 2021-04-12
 ==================
 
