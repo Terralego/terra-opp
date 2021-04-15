@@ -1,4 +1,11 @@
 
+0.6.5 / 2021-04-15
+==================
+
+  * Add preview views for viewpoint pdf
+  * Fix all sheets permissions for now
+  * CampaignZipViewpointPdf: API View to retrieve all the viewpoints pdf of a given campaign
+
 0.6.4 / 2021-04-14
 ==================
 
