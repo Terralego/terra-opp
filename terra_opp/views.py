@@ -374,7 +374,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
         detail=True,
         renderer_classes=[ZipRenderer],
     )
-    def all_sheet(self, request, *args, **kwargs):
+    def all_sheets(self, request, *args, **kwargs):
         viewpoints = self.get_object().viewpoints.all()
 
         pdfs = []

@@ -18,6 +18,10 @@ class CampaignPermission(BasePermission):
 
     def has_permission(self, request, view):
 
+        # Allow all sheets download
+        if "all_sheets" in request.path:
+            return True
+
         if request.user.is_anonymous:
             return False
 
@@ -33,6 +37,11 @@ class CampaignPermission(BasePermission):
         User with permission can_add_pictures can only
         modify assigned campaings
         """
+
+        # Allow all sheets download
+        if "all_sheets" in request.path:
+            return True
+
         if request.method in SAFE_METHODS:
             if request.user.has_terra_perm("can_manage_campaigns"):
                 return True
