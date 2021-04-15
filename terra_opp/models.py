@@ -17,7 +17,6 @@ from geostore.models import Feature
 # from django.db.models import Count
 
 
-
 class BaseLabelModel(BaseUpdatableModel):
     label = models.CharField(_("Label"), max_length=100)
 

@@ -6,9 +6,7 @@ from io import StringIO
 from urllib.parse import urlparse
 
 import weasyprint
-from django.conf import settings
 from django.core.files.storage import default_storage
-from django.utils.module_loading import import_string
 from rest_framework import renderers
 from terra_opp.helpers import CustomCsvBuilder
 
@@ -82,6 +80,9 @@ class ZipRenderer(renderers.JSONRenderer):
     format = "zip"
 
     def render(self, data, media_type=None, renderer_context=None):
+        if not isinstance(data, list):
+            return data
+
         if renderer_context["request"].method != "OPTIONS":
             with tempfile.SpooledTemporaryFile() as tmp:
                 with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as archive:

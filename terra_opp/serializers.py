@@ -67,6 +67,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
     themes = ThemeLabelSlugRelatedField(
         slug_field="label", many=True, queryset=Theme.objects.all(), required=False
     )
+    last_accepted_picture_date = serializers.DateTimeField(read_only=True)
 
     class Meta:
         model = Viewpoint
@@ -79,6 +80,7 @@ class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
             "city",
             "themes",
             "active",
+            "last_accepted_picture_date",
         )
 
 
