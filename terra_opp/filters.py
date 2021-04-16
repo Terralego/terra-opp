@@ -112,14 +112,30 @@ class JsonFilterBackend(BaseFilterBackend):
 
 
 class ViewpointFilterSet(FilterSet):
+    id = filters.CharFilter(field_name="id", lookup_expr="exact")
     city = filters.CharFilter(field_name="city__label", lookup_expr="exact")
     themes = filters.CharFilter(field_name="themes__label", lookup_expr="exact")
+    city_id = filters.CharFilter(field_name="city", lookup_expr="exact")
+    themes_id = filters.CharFilter(field_name="themes", lookup_expr="exact")
     date_from = filters.DateFilter(field_name="pictures__date", lookup_expr="gte")
     date_to = filters.DateFilter(field_name="pictures__date", lookup_expr="lte")
+    last_picture = filters.DateFilter(
+        field_name="last_accepted_picture_date", lookup_expr="lte"
+    )
 
     class Meta:
         model = Viewpoint
-        fields = ["city", "themes", "date_from", "date_to", "active"]
+        fields = [
+            "id",
+            "city",
+            "themes",
+            "city_id",
+            "themes_id",
+            "date_from",
+            "date_to",
+            "active",
+            "last_picture",
+        ]
 
 
 class PictureFilterSet(FilterSet):
