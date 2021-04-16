@@ -261,12 +261,26 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
     def test_viewpoint_search_city(self):
         list_url = reverse("terra_opp:viewpoint-list")
         city = CityFactory(label="Rouperou-le-coquet")
+        city2 = CityFactory(label="New york")
+        city3 = CityFactory(label="Los angeles")
         ViewpointFactory(
             label="Viewpoint for search",
             pictures__state="accepted",
             city=city,
         )
-        self.assertEqual(self.client.get(list_url).json()["count"], 2)
+        ViewpointFactory(
+            label="Not found",
+            pictures__state="accepted",
+            city=city2,
+        )
+        ViewpointFactory(
+            label="Not found also",
+            pictures__state="accepted",
+            city=city3,
+        )
+        self.assertEqual(self.client.get(list_url).json()["count"], 4)
+        data = self.client.get(list_url, {"city_id": city.id}).json()
+        self.assertEqual(data.get("count"), 1)
         data = self.client.get(list_url, {"city": "Rouperou-le-coquet"}).json()
         self.assertEqual(data.get("count"), 1)
 
@@ -275,6 +289,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         theme_foo = ThemeFactory(label="foo")
         theme_bar = ThemeFactory(label="bar")
         theme_baz = ThemeFactory(label="baz")
+        theme_not = ThemeFactory(label="not")
         vp = ViewpointFactory(
             label="Viewpoint for search",
             pictures__state="accepted",
@@ -285,11 +300,17 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         )
         vp.themes.add(theme_foo, theme_bar, theme_baz)
         self.assertEqual(self.client.get(list_url).json()["count"], 2)
+        data = self.client.get(list_url, {"themes_id": [theme_foo.id]}).json()
+        self.assertEqual(data.get("count"), 1)
         data = self.client.get(list_url, {"themes": ["foo"]}).json()
         self.assertEqual(data.get("count"), 1)
-        data = self.client.get(list_url, {"themes": ["bar", "foo"]}).json()
+        data = self.client.get(
+            list_url, {"themes_id": [theme_bar.id, theme_foo.id]}
+        ).json()
         self.assertEqual(data.get("count"), 1)
-        data = self.client.get(list_url, {"themes": ["bar", "foobar"]}).json()
+        data = self.client.get(
+            list_url, {"themes_id": [theme_bar.id, theme_not.id]}
+        ).json()
         self.assertEqual(data.get("count"), 0)
 
     def test_viewpoint_create_anonymous(self):

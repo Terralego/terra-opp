@@ -26,6 +26,18 @@ class PermissiveImageFieldSerializer(VersatileImageFieldSerializer):
             return None
 
 
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = "__all__"
+
+
+class ThemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Theme
+        fields = "__all__"
+
+
 class SimpleViewpointSerializer(serializers.ModelSerializer):
     picture = VersatileImageFieldSerializer("terra_opp")
     point = GeometryField(source="point.geom")

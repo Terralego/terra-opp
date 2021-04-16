@@ -42,6 +42,8 @@ from .serializers import (
     SimpleViewpointSerializer,
     ViewpointSerializerWithPicture,
     PhotographSerializer,
+    CitySerializer,
+    ThemeSerializer,
 )
 
 
@@ -90,7 +92,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         ),
     ]
     filter_fields = ["pictures", "active"]
-    search_fields = ("label",)
+    search_fields = ("label", "id")
     pagination_class = RestPageNumberPagination
     template_name = "terra_opp/viewpoint_pdf.html"
 
@@ -410,3 +412,21 @@ class CampaignViewSet(viewsets.ModelViewSet):
             pdfs.append(stream)
 
         return Response(pdfs)
+
+
+class CityViewSet(viewsets.ModelViewSet):
+    queryset = City.objects.all()
+    http_method_names = ["get", "post", "put", "delete", "options"]
+    filter_backends = (SearchFilter,)
+    serializer_class = CitySerializer
+    search_fields = ("label",)
+    pagination_class = RestPageNumberPagination
+
+
+class ThemeViewSet(viewsets.ModelViewSet):
+    queryset = Theme.objects.all()
+    http_method_names = ["get", "post", "put", "delete", "options"]
+    filter_backends = (SearchFilter,)
+    serializer_class = ThemeSerializer
+    search_fields = ("label",)
+    pagination_class = RestPageNumberPagination
