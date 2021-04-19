@@ -38,21 +38,6 @@ class ThemeSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class SimpleViewpointSerializer(serializers.ModelSerializer):
-    picture = VersatileImageFieldSerializer("terra_opp")
-    point = GeometryField(source="point.geom")
-
-    class Meta:
-        model = Viewpoint
-        fields = (
-            "id",
-            "label",
-            "picture",
-            "point",
-            "active",
-        )
-
-
 class LabelSlugRelatedField(serializers.SlugRelatedField):
     _model = None
 
@@ -67,6 +52,28 @@ class CityLabelSlugRelatedField(LabelSlugRelatedField):
 
 class ThemeLabelSlugRelatedField(LabelSlugRelatedField):
     _model = Theme
+
+
+class SimpleViewpointSerializer(serializers.ModelSerializer):
+    picture = VersatileImageFieldSerializer("terra_opp")
+    point = GeometryField(source="point.geom")
+    city = CityLabelSlugRelatedField(
+        slug_field="label",
+        queryset=City.objects.all(),
+        required=False,
+        allow_null=False,
+    )
+
+    class Meta:
+        model = Viewpoint
+        fields = (
+            "id",
+            "label",
+            "picture",
+            "point",
+            "active",
+            "city",
+        )
 
 
 class SimpleAuthenticatedViewpointSerializer(SimpleViewpointSerializer):
