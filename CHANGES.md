@@ -1,4 +1,10 @@
 
+0.6.8 / 2021-04-20
+==================
+
+  * Update translations
+  * Add change state signal for picture and campaign
+
 0.6.7 / 2021-04-19
 ==================
 
