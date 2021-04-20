@@ -329,7 +329,7 @@ class PictureViewSet(viewsets.ModelViewSet):
             new_state = serializer.validated_data["state"]
             if new_state not in [
                 Picture.DRAFT,
-                Picture.SUBMITED,
+                Picture.SUBMITTED,
             ]:
                 new_state = Picture.DRAFT
             # For self as user and draft state

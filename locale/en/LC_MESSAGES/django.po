@@ -79,7 +79,7 @@ msgid "State"
 msgstr ""
 
 #: terra_opp/models.py:176
-msgid "Submited"
+msgid "Submitted"
 msgstr ""
 
 #: terra_opp/models.py:177

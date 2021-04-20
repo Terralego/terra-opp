@@ -13,6 +13,8 @@ from versatileimagefield.fields import VersatileImageField
 
 from terra_settings.mixins import BaseUpdatableModel
 from geostore.models import Feature
+from .signals import state_change
+
 
 # from django.db.models import Count
 
@@ -104,7 +106,7 @@ class CampaignManager(models.Manager):
             viewpoints_total=models.Count("viewpoints", distinct=True),
             pictures_submited=models.Count(
                 "pictures__pk",
-                filter=models.Q(pictures__state=Picture.SUBMITED),
+                filter=models.Q(pictures__state=Picture.SUBMITTED),
                 distinct=True,
             ),
             pictures_accepted=models.Count(
@@ -161,6 +163,22 @@ class Campaign(BaseLabelModel):
     class Meta:
         ordering = ["-start_date", "-created_at"]
 
+    def save(self, *args, **kwargs):
+        prev_state = None
+        if self.id:
+            prev_state = Campaign.objects.get(id=self.id).state
+
+        super().save(*args, **kwargs)
+
+        # Send state changed event
+        if prev_state != self.state:
+            state_change.send(
+                sender=Campaign,
+                instance=self,
+                prev_state=prev_state,
+                new_state=self.state,
+            )
+
 
 def image_upload_to(instance, filename):
     date_str = instance.date.strftime("%Y-%m-%d_%H-%M-%S")
@@ -171,13 +189,14 @@ def image_upload_to(instance, filename):
 class Picture(BaseUpdatableModel):
 
     DRAFT = "draft"
-    SUBMITED = "submited"
+    SUBMITED = "submited"  # Typo...
+    SUBMITTED = "submited"
     ACCEPTED = "accepted"
     REFUSED = "refused"
 
     STATES = (
         (DRAFT, _("Draft")),
-        (SUBMITED, _("Submited")),
+        (SUBMITTED, _("Submitted")),
         (ACCEPTED, _("Accepted")),
         (REFUSED, _("Refused")),
     )
@@ -222,10 +241,23 @@ class Picture(BaseUpdatableModel):
         ordering = ["-date"]
 
     def save(self, *args, **kwargs):
+        prev_state = None
+        if self.id:
+            prev_state = Picture.objects.get(id=self.id).state
+
         super().save(*args, **kwargs)
         # Update Campaign status if any
         if self.campaign:
             self.campaign.check_state()
+
+        # Send state changed event
+        if prev_state != self.state:
+            state_change.send(
+                sender=Picture,
+                instance=self,
+                prev_state=prev_state,
+                new_state=self.state,
+            )
 
     def get_identifier(self):
         obs_id = settings.TROPP_OBSERVATORY_ID or ""
