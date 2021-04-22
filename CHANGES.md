@@ -1,4 +1,9 @@
 
+0.6.9 / 2021-04-22
+==================
+
+  * Override create model mixin to capitalize cities label (#68)
+
 0.6.8 / 2021-04-20
 ==================
 
