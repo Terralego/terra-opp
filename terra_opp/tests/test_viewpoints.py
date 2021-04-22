@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from terra_accounts.tests.factories import TerraUserFactory
 from geostore.models import Feature
 from geostore.tests.factories import FeatureFactory
-from terra_opp.models import Picture, Viewpoint
+from terra_opp.models import Picture, Viewpoint, City
 from terra_opp.tests.factories import (
     CityFactory,
     PictureFactory,
@@ -22,6 +22,71 @@ from terra_opp.tests.factories import (
     ViewpointFactory,
 )
 from terra_opp.tests.mixins import TestPermissionsMixin
+
+
+@override_settings(TROPP_OBSERVATORY_ID=20)
+class ViewpointCapitaliseTestCase(APITestCase, TestPermissionsMixin):
+    @classmethod
+    def setUpTestData(cls):
+        cls.feature = FeatureFactory()
+        cls.user = TerraUserFactory()
+
+    def test_create_viewpoint(self):
+        self.data_create = {
+            "label": "Basic viewpoint created",
+            "point": self.feature.geom.json,
+            "city": "Marseille",
+        }
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(["can_manage_viewpoints"])
+
+        response = self.client.post(
+            reverse("terra_opp:viewpoint-list"),
+            self.data_create,
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code, response.json())
+        self.assertEqual(response.json()["city"], "Marseille")
+        self.assertTrue(City.objects.filter(label="Marseille").exists())
+
+    def test_create_uncapitalized(self):
+        self.data_create = {
+            "label": "Basic viewpoint created",
+            "point": self.feature.geom.json,
+            "city": "marseille",
+        }
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(["can_manage_viewpoints"])
+
+        response = self.client.post(
+            reverse("terra_opp:viewpoint-list"),
+            self.data_create,
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code, response.json())
+        self.assertEqual(response.json()["city"], "Marseille")
+        self.assertTrue(City.objects.filter(label="Marseille").exists())
+        self.assertFalse(City.objects.filter(label="marseille").exists())
+
+    def test_already_in_db(self):
+        City.objects.create(label="Marseille")
+        self.data_create = {
+            "label": "Basic viewpoint created",
+            "point": self.feature.geom.json,
+            "city": "marseille",
+        }
+        self.client.force_authenticate(user=self.user)
+        self._set_permissions(["can_manage_viewpoints"])
+
+        response = self.client.post(
+            reverse("terra_opp:viewpoint-list"),
+            self.data_create,
+        )
+        # Request is correctly constructed and viewpoint has been created
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code, response.json())
+        self.assertEqual(response.json()["city"], "Marseille")
+        self.assertTrue(City.objects.filter(label="Marseille").exists())
+        self.assertFalse(City.objects.filter(label="marseille").exists())
 
 
 @override_settings(TROPP_OBSERVATORY_ID=20)
@@ -336,7 +401,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         )
         response = self._viewpoint_create()
         # Request is correctly constructed and viewpoint has been created
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code, response.json())
 
     def test_viewpoint_create_with_picture_anonymous(self):
         response = self._viewpoint_create_with_picture()
@@ -362,7 +427,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
         response = self._viewpoint_create_with_picture()
 
         # Request is correctly constructed and viewpoint has been created
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code, response.json())
         viewpoint = Viewpoint.objects.get(label="Viewpoint created with picture")
         self.assertIn(
             "/2018-01-01_00-00-00",

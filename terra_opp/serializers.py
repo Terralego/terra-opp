@@ -46,8 +46,13 @@ class LabelSlugRelatedField(serializers.SlugRelatedField):
         return super().to_internal_value(data)
 
 
-class CityLabelSlugRelatedField(LabelSlugRelatedField):
+class CityLabelSlugRelatedField(serializers.SlugRelatedField):
     _model = City
+
+    def to_internal_value(self, data):
+        data = data.capitalize()
+        self._model.objects.get_or_create(label=data, defaults={"label": data})
+        return super().to_internal_value(data)
 
 
 class ThemeLabelSlugRelatedField(LabelSlugRelatedField):
@@ -199,16 +204,6 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             properties={},
         )
         validated_data.setdefault("point", feature)
-
-        # Get or create city
-        city_label = validated_data.pop("city", None)
-        city, created = City.objects.get_or_create(
-            label=city_label,
-            defaults={
-                "label": city_label,
-            },
-        )
-        validated_data.setdefault("city", city)
 
         # Handle themes
         themes_labels = validated_data.pop("themes", None)
