@@ -270,11 +270,13 @@ class PictureViewSet(viewsets.ModelViewSet):
     permission_classes = [
         permissions.PicturePermission,
     ]
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filterset_class = PictureFilterSet
-    pagination_class = RestPageNumberPagination
+    filter_fields = ["state", "active"]
+    search_fields = ("viewpoint__label", "identifier")
     ordering_fields = ["state", "owner", "viewpoint", "identifier"]
     ordering = ["-created_at"]
+    pagination_class = RestPageNumberPagination
 
     def perform_create(self, serializer):
         if self.request.user.has_terra_perm("can_manage_pictures"):
