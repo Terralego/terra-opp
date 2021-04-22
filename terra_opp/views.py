@@ -16,7 +16,7 @@ from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, renderers
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 
@@ -69,6 +69,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         SchemaAwareDjangoFilterBackend,
         JsonFilterBackend,
         DjangoFilterBackend,
+        OrderingFilter,
     )
     filterset_class = ViewpointFilterSet
     filter_fields_schema = [
@@ -95,6 +96,8 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     search_fields = ("label", "id")
     pagination_class = RestPageNumberPagination
     template_name = "terra_opp/viewpoint_pdf.html"
+    ordering_fields = ["city", "active", "label"]
+    ordering = ["-created_at"]
 
     def perform_create(self, serializer):
         serializer.save()
@@ -110,12 +113,6 @@ class ViewpointViewSet(viewsets.ModelViewSet):
         # FIXME This may be better if done directly in geostore
         # FIXME Try to be more precise and delete only the related feature's tile in cache
         cache.delete("tile_cache_*")  # delete all the cached tiles
-
-    def filter_queryset(self, queryset):
-        # We must reorder the queryset here because initial filtering in
-        # viewpoint model is not done right see
-        # https://github.com/encode/django-rest-framework/issues/1717
-        return super().filter_queryset(queryset).order_by("-created_at")
 
     def get_queryset(self):
         # unauthenticated user not allowed to access archived viewpoint
@@ -273,9 +270,11 @@ class PictureViewSet(viewsets.ModelViewSet):
     permission_classes = [
         permissions.PicturePermission,
     ]
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = PictureFilterSet
     pagination_class = RestPageNumberPagination
+    ordering_fields = ["state", "owner", "viewpoint", "identifier"]
+    ordering = ["-created_at"]
 
     def perform_create(self, serializer):
         if self.request.user.has_terra_perm("can_manage_pictures"):
@@ -347,15 +346,11 @@ class CampaignViewSet(viewsets.ModelViewSet):
         permissions.CampaignPermission,
     ]
     http_method_names = ["get", "post", "put", "delete", "options"]
-    filter_backends = (CampaignFilterBackend, SearchFilter)
+    filter_backends = (CampaignFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
-
-    def filter_queryset(self, queryset):
-        # We must reorder the queryset here because initial filtering in
-        # viewpoint model is not done right see
-        # https://github.com/encode/django-rest-framework/issues/1717
-        return super().filter_queryset(queryset).order_by("-start_date", "-created_at")
+    ordering_fields = ["label", "start_date", "assignee", "state"]
+    ordering = ["-created_at"]
 
     def get_queryset(self):
         user = self.request.user
