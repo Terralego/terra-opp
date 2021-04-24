@@ -1,4 +1,12 @@
 
+0.6.10/ 2021-04-24
+==================
+
+  * Add id to viewpiont sort
+  * Add filter for campaigns
+  * Add search for pictures
+  * Add ordering
+
 0.6.9 / 2021-04-22
 ==================
 
