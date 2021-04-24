@@ -19,55 +19,6 @@ class BadFilter(APIException):
     default_code = "bad_filter"
 
 
-class CampaignFilterBackend(BaseFilterBackend):
-    """
-    Filters for campaigns
-    """
-
-    def get_schema_fields(self, view):
-        super().get_schema_fields(view)
-        return [
-            coreapi.Field(
-                name="state",
-                required=False,
-                location="query",
-                schema=coreschema.Boolean(
-                    title="Campaign state",
-                    description="'draft', 'started' or 'closed'",
-                ),
-            ),
-            coreapi.Field(
-                name="picture__state",
-                required=False,
-                location="query",
-                schema=coreschema.Enum(
-                    Picture.STATES,
-                    description=str(pformat(Picture.STATES)),
-                    title="Picture state",
-                ),
-            ),
-        ]
-
-    def filter_queryset(self, request, queryset, view):
-        state = request.GET.get("state", None)
-        if state is not None:
-
-            if state not in [s[0] for s in Campaign.STATES]:
-                raise BadFilter("Bad filter value for campaign state")
-
-            queryset = queryset.filter(state=state)
-
-        pictures_state = request.GET.get("pictures__state", None)
-        if pictures_state is not None:
-
-            if pictures_state not in [s[0] for s in Picture.STATES]:
-                raise BadFilter("Bad filter value for pictures state")
-
-            queryset = queryset.filter(pictures__state=pictures_state)
-
-        return queryset
-
-
 class JsonFilterBackend(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         for key, field in settings.TROPP_SEARCHABLE_PROPERTIES.items():
@@ -144,6 +95,67 @@ class PictureFilterSet(FilterSet):
     class Meta:
         model = Picture
         fields = ["owner"]
+
+
+class CampaignFilterSet(FilterSet):
+    date_from = filters.DateFilter(field_name="start_date", lookup_expr="gte")
+    date_to = filters.DateFilter(field_name="start_date", lookup_expr="lte")
+
+    class Meta:
+        model = Campaign
+        fields = [
+            "date_from",
+            "date_to",
+        ]
+
+
+class CampaignFilterBackend(BaseFilterBackend):
+    """
+    Filters for campaigns
+    """
+
+    def get_schema_fields(self, view):
+        super().get_schema_fields(view)
+        return [
+            coreapi.Field(
+                name="state",
+                required=False,
+                location="query",
+                schema=coreschema.Boolean(
+                    title="Campaign state",
+                    description="'draft', 'started' or 'closed'",
+                ),
+            ),
+            coreapi.Field(
+                name="picture__state",
+                required=False,
+                location="query",
+                schema=coreschema.Enum(
+                    Picture.STATES,
+                    description=str(pformat(Picture.STATES)),
+                    title="Picture state",
+                ),
+            ),
+        ]
+
+    def filter_queryset(self, request, queryset, view):
+        state = request.GET.get("state", None)
+        if state is not None:
+
+            if state not in [s[0] for s in Campaign.STATES]:
+                raise BadFilter("Bad filter value for campaign state")
+
+            queryset = queryset.filter(state=state)
+
+        pictures_state = request.GET.get("pictures__state", None)
+        if pictures_state is not None:
+
+            if pictures_state not in [s[0] for s in Picture.STATES]:
+                raise BadFilter("Bad filter value for pictures state")
+
+            queryset = queryset.filter(pictures__state=pictures_state)
+
+        return queryset
 
 
 class SchemaAwareDjangoFilterBackend(DjangoFilterBackend):
