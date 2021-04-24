@@ -97,7 +97,7 @@ class ViewpointViewSet(viewsets.ModelViewSet):
     search_fields = ("label", "id")
     pagination_class = RestPageNumberPagination
     template_name = "terra_opp/viewpoint_pdf.html"
-    ordering_fields = ["city", "active", "label"]
+    ordering_fields = ["id", "city", "active", "label"]
     ordering = ["-created_at"]
 
     def perform_create(self, serializer):
