@@ -22,6 +22,7 @@ from rest_framework.exceptions import APIException
 
 from .filters import (
     CampaignFilterBackend,
+    CampaignFilterSet,
     JsonFilterBackend,
     ViewpointFilterSet,
     SchemaAwareDjangoFilterBackend,
@@ -272,7 +273,7 @@ class PictureViewSet(viewsets.ModelViewSet):
     ]
     filter_backends = (SearchFilter, DjangoFilterBackend, OrderingFilter)
     filterset_class = PictureFilterSet
-    filter_fields = ["state", "active"]
+    filter_fields = ["state", "active", "owner"]
     search_fields = ("viewpoint__label", "identifier")
     ordering_fields = ["state", "owner", "viewpoint", "identifier"]
     ordering = ["-created_at"]
@@ -348,7 +349,14 @@ class CampaignViewSet(viewsets.ModelViewSet):
         permissions.CampaignPermission,
     ]
     http_method_names = ["get", "post", "put", "delete", "options"]
-    filter_backends = (CampaignFilterBackend, SearchFilter, OrderingFilter)
+    filterset_class = CampaignFilterSet
+    filter_backends = (
+        CampaignFilterBackend,
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    )
+    filter_fields = ["state", "assignee"]
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
     ordering_fields = ["label", "start_date", "assignee", "state"]
