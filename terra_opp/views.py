@@ -275,7 +275,7 @@ class PictureViewSet(viewsets.ModelViewSet):
     filterset_class = PictureFilterSet
     filter_fields = ["state", "active", "owner"]
     search_fields = ("viewpoint__label", "identifier")
-    ordering_fields = ["state", "owner", "viewpoint", "identifier"]
+    ordering_fields = ["state", "owner", "viewpoint", "identifier", "date"]
     ordering = ["-created_at"]
     pagination_class = RestPageNumberPagination
 
