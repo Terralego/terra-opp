@@ -3,7 +3,7 @@ from rest_framework.permissions import SAFE_METHODS, BasePermission
 
 
 class ViewpointPermission(BasePermission):
-    """ Read only for anonymous users or has terra permission """
+    """Read only for anonymous users or has terra permission"""
 
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
@@ -14,7 +14,7 @@ class ViewpointPermission(BasePermission):
 
 
 class CampaignPermission(BasePermission):
-    """ Read only for authenticated users or has terra permission """
+    """Read only for authenticated users or has terra permission"""
 
     def has_permission(self, request, view):
 
@@ -52,7 +52,7 @@ class CampaignPermission(BasePermission):
 
 
 class PicturePermission(BasePermission):
-    """ Read only for anonymous users or has terra permissions """
+    """Read only for anonymous users or has terra permissions"""
 
     def has_permission(self, request, view):
 

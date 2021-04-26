@@ -25,7 +25,7 @@ class CSVRenderer(renderers.BaseRenderer):
 
 
 def django_url_fetcher(url, *args, **kwargs):
-    """ Helper from django-weasyprint """
+    """Helper from django-weasyprint"""
     # load file:// paths directly from disk
     if url.startswith("file:"):
         mime_type, encoding = mimetypes.guess_type(url)
