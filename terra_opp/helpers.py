@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class CustomCsvBuilder:
-    """ Build csv file from dict/list data """
+    """Build csv file from dict/list data"""
 
     def __init__(self, data):
         self.data = data
