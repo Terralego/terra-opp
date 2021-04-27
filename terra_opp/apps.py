@@ -45,6 +45,7 @@ class TerraOppConfig(PermissionRegistrationMixin, AppConfig):
                 "viewpoints": reverse("terra_opp:viewpoint-list"),
                 "layer_tilejson": reverse("layer-tilejson", args=(opp_layer.pk,)),
                 "searchable_properties": settings.TROPP_SEARCHABLE_PROPERTIES,
+                "theme_categories": getattr(settings, "TROPP_THEME_CATEGORIES", []),
                 "layerId": opp_layer.pk,
                 "layerName": opp_layer.name,
             }

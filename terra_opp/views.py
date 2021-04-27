@@ -439,9 +439,11 @@ class ThemeViewSet(viewsets.ModelViewSet):
     filter_backends = (
         SearchFilter,
         OrderingFilter,
+        DjangoFilterBackend,
     )
     serializer_class = ThemeSerializer
-    search_fields = ("label",)
+    filter_fields = ["category"]
+    search_fields = ("label", "category")
     pagination_class = RestPageNumberPagination
-    ordering_fields = ["label"]
+    ordering_fields = ["label", "category"]
     ordering = ["label"]
