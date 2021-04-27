@@ -422,16 +422,26 @@ class CampaignViewSet(viewsets.ModelViewSet):
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
     http_method_names = ["get", "post", "put", "delete", "options"]
-    filter_backends = (SearchFilter,)
+    filter_backends = (
+        SearchFilter,
+        OrderingFilter,
+    )
     serializer_class = CitySerializer
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
+    ordering_fields = ["label"]
+    ordering = ["label"]
 
 
 class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all()
     http_method_names = ["get", "post", "put", "delete", "options"]
-    filter_backends = (SearchFilter,)
+    filter_backends = (
+        SearchFilter,
+        OrderingFilter,
+    )
     serializer_class = ThemeSerializer
     search_fields = ("label",)
     pagination_class = RestPageNumberPagination
+    ordering_fields = ["label"]
+    ordering = ["label"]
