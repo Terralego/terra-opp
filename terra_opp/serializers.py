@@ -10,6 +10,7 @@ from rest_framework import serializers, fields
 from rest_framework_gis.fields import GeometryField
 from datastore.models import RelatedDocument
 from datastore.serializers import RelatedDocumentUrlSerializer
+from datastore.fields import FileBase64UrlField
 from versatileimagefield.serializers import VersatileImageFieldSerializer
 
 from .models import Campaign, City, Picture, Theme, Viewpoint
@@ -146,6 +147,10 @@ class CampaignPictureSerializer(PictureSerializer):
         fields = ("id", "date", "state", "viewpoint")
 
 
+class CustomRelatedDocumentUrlSerializer(RelatedDocumentUrlSerializer):
+    document = FileBase64UrlField(required=False)
+
+
 class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     picture_ids = serializers.PrimaryKeyRelatedField(
         source="pictures",
@@ -155,7 +160,7 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
     )
     pictures = SimplePictureSerializer(many=True, read_only=True)
     last_accepted_picture_date = serializers.DateTimeField(read_only=True)
-    related = RelatedDocumentUrlSerializer(many=True, required=False)
+    related = CustomRelatedDocumentUrlSerializer(many=True, required=False)
     point = GeometryField(source="point.geom")
     city = CityLabelSlugRelatedField(
         slug_field="label",
@@ -250,12 +255,19 @@ class ViewpointSerializerWithPicture(serializers.ModelSerializer):
             # Remove stale
             instance.related.exclude(key__in=[r["key"] for r in related_docs]).delete()
             for related in related_docs:
-                file = related["document"]
-                extension = file.content_type.split("/")[1]
-                file.name = f"{related['key']}.{extension}"
+                file = None
+                if "document" in related:
+                    file = related["document"]
+                    extension = file.content_type.split("/")[1]
+                    file.name = f"{related['key']}.{extension}"
+
                 try:
                     existing = instance.related.get(key=related["key"])
-                    existing.document = file
+                    # Update file if sent
+                    if file:
+                        existing.document = file
+                    # Update properties
+                    existing.properties = related["properties"]
                     existing.save()
                 except RelatedDocument.DoesNotExist:
                     RelatedDocument(**related, linked_object=instance).save()
