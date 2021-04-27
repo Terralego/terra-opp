@@ -47,7 +47,7 @@ class City(BaseLabelModel):
 
 
 class Theme(BaseLabelModel):
-    pass
+    category = models.CharField(_("Category"), max_length=100, default="")
 
 
 class Viewpoint(BaseLabelModel):
