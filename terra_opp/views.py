@@ -4,6 +4,7 @@ from functools import reduce
 
 import coreapi
 import coreschema
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields.jsonb import KeyTransform
@@ -14,6 +15,7 @@ from django.template import loader
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import viewsets, renderers
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -422,6 +424,9 @@ class CampaignViewSet(viewsets.ModelViewSet):
 class CityViewSet(viewsets.ModelViewSet):
     queryset = City.objects.all()
     http_method_names = ["get", "post", "put", "delete", "options"]
+    permission_classes = [
+        permissions.ViewpointPermission,
+    ]
     filter_backends = (
         SearchFilter,
         OrderingFilter,
@@ -436,6 +441,9 @@ class CityViewSet(viewsets.ModelViewSet):
 class ThemeViewSet(viewsets.ModelViewSet):
     queryset = Theme.objects.all()
     http_method_names = ["get", "post", "put", "delete", "options"]
+    permission_classes = [
+        permissions.ViewpointPermission,
+    ]
     filter_backends = (
         SearchFilter,
         OrderingFilter,
