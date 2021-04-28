@@ -1,4 +1,11 @@
 
+0.7.0 / 2021-04-28
+==================
+
+  * Fix permissions for theme and city views
+  * Add categories to theme
+  * Add theme and city filter
+
 0.6.11 / 2021-04-27
 ==================
 
