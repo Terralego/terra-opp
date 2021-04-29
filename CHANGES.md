@@ -1,4 +1,9 @@
 
+0.7.1 / 2021-04-29
+==================
+
+  * Change default active status to false for viewpoint
+
 0.7.0 / 2021-04-28
 ==================
 
