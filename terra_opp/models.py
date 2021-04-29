@@ -68,7 +68,7 @@ class Viewpoint(BaseLabelModel):
     )
     properties = JSONField(_("Properties"), default=dict, blank=True)
     related = GenericRelation("datastore.RelatedDocument")
-    active = models.BooleanField(_("Active"), default=True)
+    active = models.BooleanField(_("Active"), default=False)
 
     objects = ViewpointsManager()
 
