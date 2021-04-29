@@ -103,6 +103,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             label="Viewpoint with accepted picture",
             pictures__state="accepted",
             properties={"test_update": "ko"},
+            active=True,
         )
         # Create viewpoints with no picture attached to it
         cls.viewpoint_without_picture = ViewpointFactory(
@@ -316,6 +317,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                 "voie": "coin d'en bas de la rue du bout",
                 "site": "Carrière des petits violoncelles",
             },
+            active=True,
         )
         self.assertEqual(self.client.get(list_url).json()["count"], 2)
         data = self.client.get(list_url, {"properties__voie": "rue"}).json()
@@ -332,16 +334,19 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
             label="Viewpoint for search",
             pictures__state="accepted",
             city=city,
+            active=True,
         )
         ViewpointFactory(
             label="Not found",
             pictures__state="accepted",
             city=city2,
+            active=True,
         )
         ViewpointFactory(
             label="Not found also",
             pictures__state="accepted",
             city=city3,
+            active=True,
         )
         self.assertEqual(self.client.get(list_url).json()["count"], 4)
         data = self.client.get(list_url, {"city_id": city.id}).json()
@@ -362,6 +367,7 @@ class ViewpointTestCase(APITestCase, TestPermissionsMixin):
                 "voie": "coin d'en bas de la rue du bout",
                 "site": "Carrière des petits violoncelles",
             },
+            active=True,
         )
         vp.themes.add(theme_foo, theme_bar, theme_baz)
         self.assertEqual(self.client.get(list_url).json()["count"], 2)
