@@ -1,4 +1,10 @@
 
+0.7.2 / 2021-04-30
+==================
+
+  * Viewpoints are not removed when a city is deleted
+  * Create a city now correctly capitalize the label
+
 0.7.1 / 2021-04-29
 ==================
 
