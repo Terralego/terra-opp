@@ -34,7 +34,7 @@ class CitySerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
-        label = data.get('label').capitalize()
+        label = data.get("label").capitalize()
         return {**validated_data, "label": label}
 
 
