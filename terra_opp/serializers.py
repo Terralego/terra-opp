@@ -32,6 +32,11 @@ class CitySerializer(serializers.ModelSerializer):
         model = City
         fields = "__all__"
 
+    def to_internal_value(self, data):
+        validated_data = super().to_internal_value(data)
+        label = data.get("label").capitalize()
+        return {**validated_data, "label": label}
+
 
 class ThemeSerializer(serializers.ModelSerializer):
     class Meta:

@@ -58,7 +58,7 @@ class Viewpoint(BaseLabelModel):
     )
     city = models.ForeignKey(
         City,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         related_name="viewpoints",
         null=True,
     )
