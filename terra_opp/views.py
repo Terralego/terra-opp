@@ -426,7 +426,9 @@ class CampaignViewSet(viewsets.ModelViewSet):
     def notify_admin(self, request, *args, **kwargs):
         campaign = self.get_object()
         campaign_updated.send(sender=campaign.__class__, instance=campaign)
-        return Response(status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(campaign)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 class CityViewSet(viewsets.ModelViewSet):
