@@ -16,7 +16,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets, renderers
+from rest_framework import viewsets, renderers, status
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
@@ -48,6 +48,8 @@ from .serializers import (
     CitySerializer,
     ThemeSerializer,
 )
+
+from .signals import campaign_updated
 
 
 class CampaignNotFound(APIException):
@@ -419,6 +421,12 @@ class CampaignViewSet(viewsets.ModelViewSet):
             pdfs.append(stream)
 
         return Response(pdfs)
+
+    @action(detail=True, methods=["GET"])
+    def notify_admin(self, request, *args, **kwargs):
+        campaign = self.get_object()
+        campaign_updated.send(sender=campaign.__class__, instance=campaign)
+        return Response(status=status.HTTP_200_OK)
 
 
 class CityViewSet(viewsets.ModelViewSet):
